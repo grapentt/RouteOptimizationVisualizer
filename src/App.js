@@ -31,8 +31,26 @@ export function App() {
     setSelectedAlgo(e.label);
   };
   const handleSpeedSelect = (value) => {
+    setIsRunning(false);
     setSpeed(value);
   };
+  const [text, setText] = useState("Run Algorithm");
+  const handleRunAlgoButton = () => {
+    setAddingNodes(false);
+    setClearingBoard(false);
+    if (text == "Run Algorithm") {
+      setremoveEdges(false);
+      setIsRunning(true);
+      setText("Remove Edges");
+    }
+    else {
+      setremoveEdges(true);
+      setIsRunning(false);
+      setText("Run Algorithm");
+    }
+  };
+
+  const [removeEdges, setremoveEdges] = useState(false);
 
 
   //in the beginning we click the AddNodesButton 2, because of weird bug that it only works after clicking at least once
@@ -48,7 +66,6 @@ export function App() {
       </div>
     </div>
 
-    
       
       <div className = "dropdownContainer"> 
         <Select className = "dropdown"
@@ -79,7 +96,7 @@ export function App() {
 
     <div className = "Main">
       <div className="Canvas">
-        <ReactP5Wrapper sketch={sketch} addingNodes = {addingNodes} isRunning = {isRunning} clearinBoard = {clearingBoard} algo = {algo} speed = {speed} /> 
+        <ReactP5Wrapper sketch={sketch} addingNodes = {addingNodes} isRunning = {isRunning} clearinBoard = {clearingBoard} algo = {algo} speed = {speed} removeEdges = {removeEdges} /> 
       </div>
     </div>
 
@@ -94,12 +111,10 @@ export function App() {
                     {addingNodes ? 'Stop adding Nodes' : 'Add Nodes'}
         </button>
         <button className = "RunAlgoButton" 
-                onClick={async ()=>{
-                  setAddingNodes(false);
-                  setIsRunning(!isRunning);
-                  setClearingBoard(false);
+                onClick={()=>{
+                  handleRunAlgoButton();
                   } }>
-          {isRunning ? 'Remove Edges' : 'Run Algorithm'}
+                    {text}
         </button>
         <button className = "ClearBoardButton" 
                 onClick={()=>{

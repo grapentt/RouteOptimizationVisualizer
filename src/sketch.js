@@ -11,7 +11,7 @@ let count = 1; //count the nodes
 let graph = new Graph(0);
 let totalGraph = new Graph(0);
 let startDefined = false;
-let algo = "Nearest Insertion";
+let algo = "Not Defined";
 
 const sketch = (p) => {
 
@@ -32,6 +32,7 @@ const sketch = (p) => {
   }
 
   p.draw = async () => {
+    console.log("props are: addingNodes " + addingNodes + " isRunnung: " + isRunning);
     p.background(220);
     //draw the nodes
     //mouse position and already added nodes white
@@ -52,6 +53,38 @@ const sketch = (p) => {
      //start node pink
      p.fill(255, 0, 200);
      p.circle(startNode.x, startNode.y, 10);
+
+     if (isRunning) {
+      isRunning = false;
+      console.log("hi, cur algo is: " + algo);
+      switch(algo) {
+        case 'Nearest Insertion':
+          await insertion("nearest");
+          break;
+          case 'Farthest Insertion':
+            await insertion("farthest");
+            break;
+          case 'Nearest Neighbor':
+            await nearestNeighbor(startNode, new Array(graph.V).fill(false), false);
+            break;
+          case 'Nearest Neighbor Look Ahead (made up)':
+            await nearestNeighborImproved();
+            break;
+          case 'Brute Force':
+            await bruteForce(startNode, new Array(graph.V).fill(false), 0);
+            break;
+          case 'Cluster naively':
+            await clusterNaively();
+            break;
+          case 'MST':
+            await computeMST();
+            break;
+          default:
+            isRunning = false;
+      }
+            //christofides();
+    }
+
   };
 
 
@@ -96,38 +129,6 @@ const sketch = (p) => {
     if (addingNodes) 
       addNodes(p);
     //the algorithm updates the paths that p.draw() displays
-    if (isRunning) {
-      isRunning = false;
-
-      console.log("hi, cur algo is: " + algo);
-      switch(algo) {
-        case 'Nearest Insertion':
-          await insertion("nearest");
-          break;
-          case 'Farthest Insertion':
-            await insertion("farthest");
-            break;
-          case 'Nearest Neighbor':
-            await nearestNeighbor(startNode, new Array(graph.V).fill(false), false);
-            break;
-          case 'Nearest Neighbor Look Ahead (made up)':
-            await nearestNeighborImproved();
-            break;
-          case 'Brute Force':
-            await bruteForce(startNode, new Array(graph.V).fill(false), 0);
-            break;
-          case 'Cluster naively':
-            await clusterNaively();
-            break;
-          case 'MST':
-            await computeMST();
-            break;
-          default:
-            isRunning = false;
-      }
-            //christofides();
-    }
-    isRunning = false;
   };
 
   /**
@@ -141,7 +142,7 @@ const sketch = (p) => {
     }
     p.loop();
     //if Y is smaller than HEIGHT, the click was outside of canvas (probably on button) and the don't add
-    if (p.mouseY < HEIGHT) {
+    if (p.mouseY < HEIGHT && p.mouseY > 0) {
       let node = new Node(p.mouseX, p.mouseY, count++);
       graph.addVertex(node);
     }
@@ -149,8 +150,9 @@ const sketch = (p) => {
 
     //this function "sends" data/additional parameters to our function. When ever the props change, the change is passed here
     p.updateWithProps = function (newProps) {
-      if (!newProps.isRunning)
+      if (newProps.removeEdges) {
         removeAllEdges();
+      }
       addingNodes = newProps.addingNodes;
       isRunning = newProps.isRunning;
       clearingBoard = newProps.clearinBoard;
