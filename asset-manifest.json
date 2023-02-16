@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/RouteOptimizationVisualizer/static/css/main.073c9b0a.css",
+    "main.js": "/RouteOptimizationVisualizer/static/js/main.68b44324.js",
+    "static/js/787.28cb0dcd.chunk.js": "/RouteOptimizationVisualizer/static/js/787.28cb0dcd.chunk.js",
+    "static/media/logo.svg": "/RouteOptimizationVisualizer/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
+    "index.html": "/RouteOptimizationVisualizer/index.html",
+    "main.073c9b0a.css.map": "/RouteOptimizationVisualizer/static/css/main.073c9b0a.css.map",
+    "main.68b44324.js.map": "/RouteOptimizationVisualizer/static/js/main.68b44324.js.map",
+    "787.28cb0dcd.chunk.js.map": "/RouteOptimizationVisualizer/static/js/787.28cb0dcd.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.073c9b0a.css",
+    "static/js/main.68b44324.js"
+  ]
+}
