@@ -8,12 +8,15 @@ import 'rc-slider/assets/index.css';
 
 export function App() {
 
-
+  async function delay(time) {
+    return new Promise(resolve => setTimeout(resolve, time/speed));
+  }
   const [addingNodes, setAddingNodes] = useState(false);
   const [isRunning, setIsRunning] = useState(false);
   const [clearingBoard, setClearingBoard] = useState(false);
   //const algo = 'Nearest Neighbor';
   const [algo, setSelectedAlgo] = useState("Not Selected");
+  const [localSearch, setSelectedLocalSearch] = useState("Not Selected");
   const [speed, setSpeed] = useState(5);
   const algoOptions = [
     { value: "0", label: "Select Algorithm" },
@@ -25,30 +28,66 @@ export function App() {
    // { value: "6", label: "Cluster naively" },
     { value: "7", label: "Christofides" }
   ];
+  const localSearchOptions = [
+    { value: "0", label: "Select Algorithm" },
+    { value: "1", label: "2-opt" }
+  ];
   const handleAlgoSelect = (e) => {
     setAddingNodes(false);
     setIsRunning(false);
     setSelectedAlgo(e.label);
   };
+  const handleLocalSearchSelect = (e) => {
+    setAddingNodes(false);
+    setIsRunning(false);
+    setSelectedLocalSearch(e.label);
+  };
   const handleSpeedSelect = (value) => {
     setIsRunning(false);
     setSpeed(value);
   };
-  const [text, setText] = useState("Run Algorithm");
-  const handleRunAlgoButton = () => {
+  const [runAlgoText, setRunAlgoText] = useState("Run Algorithm");
+  const [localSearchText, setLocalSearchText] = useState("Run Algorithm");
+
+  const handleRunAlgoButton = async () => {
     setAddingNodes(false);
     setClearingBoard(false);
-    if (text == "Run Algorithm") {
+    if (runAlgoText == "Run Algorithm") {
       setremoveEdges(false);
       setIsRunning(true);
-      setText("Remove Edges");
+      setRunAlgoText("Remove Edges");
+      setLocalSearchText("Run local search");
     }
     else {
       setremoveEdges(true);
       setIsRunning(false);
-      setText("Run Algorithm");
+      setRunAlgoText("Run Algorithm");
+      setLocalSearchText("Run Algorithm");
+
     }
+    await delay(500);
+    setIsRunning(false); 
+
   };
+
+  const handleLocalSearchButton = async () => {
+    setAddingNodes(false);
+    setClearingBoard(false);
+    setremoveEdges(false);
+    setIsRunning(true); 
+    if (localSearchText == "Run Algorithm") {
+      setLocalSearchText("Run local search");
+    }
+    if (runAlgoText == "Run Algorithm") {
+      setRunAlgoText("Remove Edges");
+      // only then will we set isRunning to false, because if we do that we can run local search
+      // if we don't set it, we can only run local search again, after it got changed
+      await delay(500);
+      setIsRunning(false); 
+    }
+
+  };
+  
 
   const [removeEdges, setremoveEdges] = useState(false);
 
@@ -79,6 +118,18 @@ export function App() {
         />
       </div>
 
+      <div className = "dropdownContainer"> 
+        <Select className = "dropdown"
+          options={localSearchOptions}
+          onChange={handleLocalSearchSelect}        
+          value={localSearchOptions.find(function (option) {
+            return option.value === localSearch;
+          })}
+          defaultValue={{ label: "Select Local Search", value: 0 }}
+          label="Single select"
+        />
+      </div>
+
 
       <div className = "sliderContainer">
       <label id="slider-label">Chose speed by sliding</label>
@@ -96,7 +147,9 @@ export function App() {
 
     <div className = "Main">
       <div className="Canvas">
-        <ReactP5Wrapper sketch={sketch} addingNodes = {addingNodes} isRunning = {isRunning} clearinBoard = {clearingBoard} algo = {algo} speed = {speed} removeEdges = {removeEdges} /> 
+        <ReactP5Wrapper sketch={sketch} addingNodes = {addingNodes} isRunning = {isRunning} 
+                      clearinBoard = {clearingBoard} algo = {algo} speed = {speed} removeEdges = {removeEdges}
+                      localSearch = {localSearch} /> 
       </div>
     </div>
 
@@ -111,10 +164,16 @@ export function App() {
                     {addingNodes ? 'Stop adding Nodes' : 'Add Nodes'}
         </button>
         <button className = "RunAlgoButton" 
-                onClick={()=>{
-                  handleRunAlgoButton();
+                onClick={async ()=>{
+                  await handleRunAlgoButton();
                   } }>
-                    {text}
+                    {runAlgoText}
+        </button>
+        <button className = "RunLocalSearchButton" 
+                onClick={async ()=>{
+                  await handleLocalSearchButton();
+                  } }>
+                    {localSearchText}
         </button>
         <button className = "ClearBoardButton" 
                 onClick={()=>{

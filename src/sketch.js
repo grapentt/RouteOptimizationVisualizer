@@ -13,6 +13,10 @@ let graph = new Graph(0);
 let totalGraph = new Graph(0);
 let startDefined = false;
 let algo = "Not Defined";
+let localSearch = "Not defined";
+// state is 0 if no path found yet
+// 1 if we already have a solution (that we might want to improve)
+let state = 0;
 let eulerCycle = [];
 
 const sketch = (p) => {
@@ -34,7 +38,6 @@ const sketch = (p) => {
   }
 
   p.draw = async () => {
-    console.log("props are: addingNodes " + addingNodes + " isRunnung: " + isRunning);
     p.background(220);
     //draw the nodes
     //mouse position and already added nodes white
@@ -56,36 +59,48 @@ const sketch = (p) => {
      p.fill(255, 0, 200);
      p.circle(startNode.x, startNode.y, 10);
 
-     if (isRunning) {
-      isRunning = false;
-      console.log("hi, cur algo is: " + algo);
-      switch(algo) {
-        case 'Nearest Insertion':
-          await insertion("nearest");
-          break;
-          case 'Farthest Insertion':
-            await insertion("farthest");
+    //if we did not find any solution yet, we will run a algorithm to find inital solution
+    if (state == 0) {
+      if (isRunning) {
+        isRunning = false;
+        switch(algo) {
+          case 'Nearest Insertion':
+            await insertion("nearest");
             break;
-          case 'Nearest Neighbor':
-            await nearestNeighbor(startNode, new Array(graph.V).fill(false), false);
-            break;
-          case 'Nearest Neighbor Look Ahead (made up)':
-            await nearestNeighborImproved();
-            break;
-          case 'Brute Force':
-            await bruteForce(startNode, new Array(graph.V).fill(false), 0);
-            break;
-          case 'Cluster naively':
-            await clusterNaively();
-            break;
-          case 'Christofides':
-            await christofides();
+            case 'Farthest Insertion':
+              await insertion("farthest");
+              break;
+            case 'Nearest Neighbor':
+              await nearestNeighbor(startNode, new Array(graph.V).fill(false), false);
+              break;
+            case 'Nearest Neighbor Look Ahead (made up)':
+              await nearestNeighborImproved();
+              break;
+            case 'Brute Force':
+              await bruteForce(startNode, new Array(graph.V).fill(false), 0);
+              break;
+            case 'Cluster naively':
+              await clusterNaively();
+              break;
+            case 'Christofides':
+              await christofides();
+              break;
+            default:
+              isRunning = false;
+        }
+        state = 1;
+      }
+    }
+    if (state == 1) {
+      if (isRunning) {
+        isRunning = false;
+        switch (localSearch) {
+          case '2-opt':
+            await twoOpt();
             break;
           default:
-            isRunning = false;
+        }
       }
-      isRunning = false;
-            //christofides();
     }
 
   };
@@ -155,6 +170,11 @@ const sketch = (p) => {
     p.updateWithProps = function (newProps) {
       if (newProps.removeEdges) {
         removeAllEdges();
+        let nodes = graph.getNodes();
+        for (let node of nodes) {
+          node.color = '#fff';
+        }
+        state = 0;
       }
       addingNodes = newProps.addingNodes;
       isRunning = newProps.isRunning;
@@ -165,9 +185,12 @@ const sketch = (p) => {
         graph = new Graph(0);
         startDefined = false;
         totalGraph = new Graph(0);
+        state = 0;
       }
       if (!newProps.algo !== algo)
         algo = newProps.algo;
+      if (!newProps.localSearch !== localSearch)
+        localSearch = newProps.localSearch;
       if (!newProps.speed !== speed) 
         speed = newProps.speed;
       if (speed == 0)
@@ -184,9 +207,9 @@ const sketch = (p) => {
     }
 */
 
-    async function delay(time) {
-      return new Promise(resolve => setTimeout(resolve, time/speed));
-    }
+async function delay(time) {
+  return new Promise(resolve => setTimeout(resolve, time/speed));
+}
     
     
     function displayNodes() {
@@ -585,17 +608,15 @@ const sketch = (p) => {
       let nodesWithOddDegree = await getNodesWithOddDegree(graph);  
 
       for (var node of nodesWithOddDegree) {
-        await delay(3000);
-        console.log("yoo");
         node.color = "#ae2a0d";
       }
       // await delay(15000);
       await findPerfectMatchingMinWeight(nodesWithOddDegree);
       await findEulerianCycle();
     
-      for (node of eulerCycle) {
-        console.log(node.index+  "-");
-      }
+      // for (node of eulerCycle) {
+      //   console.log(node.index+  "-");
+      // }
       let included = new Array(graph.V).fill(false);
       var curNode = eulerCycle.pop();
       var temp = curNode;
@@ -606,18 +627,20 @@ const sketch = (p) => {
         curNode = eulerCycle.pop();
         if (!included[curNode.index]) {
           included[curNode.index] = true;
-          console.log("Now adding: " + temp.index +" to " + curNode.index);
           addEdge(temp, curNode, euclidDistance(temp, curNode));
           temp = curNode;
         }
       }
-      console.log("Now adding: " + curNode.index +" to " + first.index);
 
       addEdge(temp, first, euclidDistance(curNode, first));
       // let edge = new Edge(nodesWithOddDegree[0], nodesWithOddDegree[1], euclidDistance(nodesWithOddDegree[0], nodesWithOddDegree[1]));
       // //console.log('there are nodes with odd degree: ' + nodesWithOddDegree.length);
       // edge.color = 255;
       // graph.addEdgeFromEdge(edge);
+
+      for (var node of nodesWithOddDegree) {
+        node.color = "#fff";
+      }
       
     }
 
@@ -636,7 +659,6 @@ const sketch = (p) => {
     }
 
     async function printEulerUtil(v) {
-      console.log("Pushing: " + v.index);
       eulerCycle.push(v);
 
       //Print Euler tour starting from vertex u
@@ -648,7 +670,6 @@ const sketch = (p) => {
         // If edge u-v is not removed and it's a
         // valid next edge
         if (await isValidNextEdge(v, node)) {
-          console.log(v.index + "-" + node.index);
           graph.removeEdge(v, node);
           await printEulerUtil(node);
           break;
@@ -730,7 +751,6 @@ const sketch = (p) => {
 
       var result = edmonds.maxWeightMatching();
       
-      console.log(result)
 
       for (var i = 0; i < result.length; ++i) {
         var indexV = i;
@@ -826,6 +846,109 @@ const sketch = (p) => {
       }
     }
 
+    function getPath() {
+      let path = [];
+      let visited = new Array(graph.V).fill(false);
+      let cur = startNode;
+      for (var i = 0; i < graph.V; ++i) {
+        path.push(cur);
+        visited[cur.index] = true;
+        // get both neighbors
+        var neighbors = graph.getNeighbors(cur);
+        cur = visited[neighbors[0].index] ? neighbors[1] : neighbors[0]; 
+      }
+      path.push(startNode);
+      // for (let node of path) {
+      //   console.log(node.index + "-");
+      // }
+      return path;
+    }
+
+    function getLength(path) {
+      let length = 0;
+      let n = path.length;
+      for (let i = 0; i < n-1; ++i) {
+        length += euclidDistance(path[i], path[i+1]);
+      }
+      return length;
+    }
+
+    async function do2Opt(path, i, j) {
+      path[i].color = "#0f61e8";
+      path[i+1].color = "#0f61e8";
+      path[j].color = "#0f61e8";
+      path[j+1].color = "#0f61e8";
+
+      path[i].color = "#0f61e8";
+      path[j+1].color = "#0f61e8";
+      path[j].color = "#0f61e8";
+      path[i+1].color = "#0f61e8";
+      
+
+
+      // find out why not defined sometimes!
+      let oldEdge1 = graph.findEdge(path[i], path[i+1]);
+      let oldEdge2 = graph.findEdge(path[j], path[j+1]);
+      oldEdge1.color = "#0f61e8";
+      oldEdge2.color = "#0f61e8";
+      await delay(3000);
+      let newEdge1 = new Edge(path[i], path[j], euclidDistance(path[i], path[j]));
+      newEdge1.color = "#ae2a0d";
+      let newEdge2 = new Edge(path[i+1], path[j+1], euclidDistance(path[i+1], path[j+1]));
+      newEdge2.color = "#ae2a0d";
+      await delay(3000);
+      graph.addEdgeFromEdge(newEdge1);
+      graph.addEdgeFromEdge(newEdge2);
+      await delay(3000);
+      removeEdge(path[i], path[i+1]);
+      removeEdge(path[j], path[j+1]);
+      await delay(4000);
+      newEdge1.color = "#000000";
+      newEdge2.color = "#000000";
+
+
+      path[i].color = "#fff";
+      path[i+1].color = "#fff";
+      path[j].color = "#fff";
+      path[j+1].color = "#fff";
+
+      path[i].color = "#fff";
+      path[j+1].color = "#fff";
+      path[j].color = "#fff";
+      path[i+1].color = "#fff";
+      await delay(3000);
+
+
+    }
+
+    async function twoOpt() {
+      let foundImprovement = true;
+      let path = getPath();
+      let curLength = getLength(path);
+      let n = path.length;
+      while (foundImprovement) {
+        foundImprovement = false;
+        for (let i = 0; i < n - 2; i++) {
+          for (let j = i + 1; j < n-1; j++) {
+            // first subtract new lengths
+            var gain = -euclidDistance(path[i], path[j]);
+            gain -= euclidDistance(path[i+1], path[j+1]);
+            // then add old lengths
+            gain += euclidDistance(path[i], path[i+1]);
+            gain += euclidDistance(path[j], path[j+1]);
+            // If old length is greater than new length
+            if (gain > 1e-4) {
+              await do2Opt(path, i, j);
+              curLength -= gain;
+              foundImprovement = true;
+              path = getPath();
+            }
+            gain = 0;
+          }
+        }
+      }
+    }
+
     /**
      * 
      * @param {number of clusters} k 
@@ -839,16 +962,13 @@ const sketch = (p) => {
       for (let e of edges) {
         await delay(1000);    
         let v1 = e.either();
-        let v2 = e.other(v1);
-        console.log("v1: " + v1.index);
-        console.log("v2: " + v2.index);    
+        let v2 = e.other(v1);  
         //case 1, both nodes not included
         if (!v1.root && !v2.root) {
           v2.root = v1;
           v1.isRoot = true;
           v1.children = 1;
           addEdge(v1, v2, e.weight);
-          console.log("v1 and v2 both had no root. Now children " + v1.children);
           continue;
         }
         if (v1.isRoot && !v2.root || v1.root && !v2.root) {
@@ -885,6 +1005,8 @@ const sketch = (p) => {
       }
 
     }
+
+    
 
 }
 
