@@ -702,6 +702,14 @@ const sketch = (p) => {
           count += await DFSCount(node, visited);
       }
       return count;
+      let nodesWithOddDegree = getNodesWithOddDegree(graph);  
+      await findPerfectMatchingMinWeight();
+      let edge = new Edge(nodesWithOddDegree[0], nodesWithOddDegree[1], euclidDistance(nodesWithOddDegree[0], nodesWithOddDegree[1]));
+      //console.log('there are nodes with odd degree: ' + nodesWithOddDegree.length);
+      edge.color = 255;
+      graph.addEdgeFromEdge(edge);
+      //min-cost-max matching is harder than I thought...
+      
     }
 
     /**
@@ -735,11 +743,11 @@ const sketch = (p) => {
       }
     } 
 
-    async function getNodesWithOddDegree(g) {
-      // g.printGraph();
+
+    function getNodesWithOddDegree(g) {
       let out = [];
-      for (let node of graph.getNodes()) {
-        if (graph.getNeighbors(node).length % 2 == 1){
+      for (let node of g.getNodes()) {
+        if (g.getNeighbors(node).length % 2 == 1){
           out.push(node);
         }
       }
