@@ -1,4 +1,5 @@
 import {Edge} from './Edge.js'; 
+// import {Node} from './Node.js'; 
 
 export class Graph {
     constructor(V) {
@@ -127,23 +128,20 @@ export class Graph {
     }
 }
 
+// // Using the above implemented graph class
+// var g = new Graph(6);
+// var vertices = [ new Node(1,1,1), new Node(2,2,2), new Node(3,3,3) ];
+ 
+// // adding vertices
+// for (var i = 0; i < vertices.length; i++) {
+//     g.addVertex(vertices[i]);
+// }
+ 
+// // adding edges
+// g.addEdge(vertices[0], vertices[1], 2);
+// g.addEdge(vertices[0], vertices[2], 3);
+ 
+// // prints all vertex and
+// // its adjacency list
+// g.printGraph();
 
-/*
-// Using the above implemented graph class
-var g = new Graph(6);
-var vertices = [ new Node(1,1,1), new Node(2,2,2), new Node(3,3,3) ];
- 
-// adding vertices
-for (var i = 0; i < vertices.length; i++) {
-    g.addVertex(vertices[i]);
-}
- 
-// adding edges
-g.addEdge(vertices[0], vertices[1], 2);
-g.addEdge(vertices[0], vertices[2], 3);
- 
-// prints all vertex and
-// its adjacency list
-g.printGraph();
-
-*/

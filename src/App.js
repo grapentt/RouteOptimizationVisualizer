@@ -23,7 +23,7 @@ export function App() {
     { value: "4", label: "Nearest Neighbor Look Ahead (made up)" },
     { value: "5", label: "Brute Force" },
    // { value: "6", label: "Cluster naively" },
-    { value: "6", label: "MST" }
+    { value: "7", label: "Christofides" }
   ];
   const handleAlgoSelect = (e) => {
     setAddingNodes(false);

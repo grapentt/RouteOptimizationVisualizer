@@ -1,6 +1,7 @@
 import {Graph} from './Graph.js';
 import {Node} from './Node.js';
 import {Edge} from './Edge.js';
+import {Edmonds} from './Blossom.js'; 
 
 let WIDTH = window.innerWidth; //"static variables" like in java
 let HEIGHT = window.innerHeight *3/ 5;
@@ -12,6 +13,7 @@ let graph = new Graph(0);
 let totalGraph = new Graph(0);
 let startDefined = false;
 let algo = "Not Defined";
+let eulerCycle = [];
 
 const sketch = (p) => {
 
@@ -76,12 +78,13 @@ const sketch = (p) => {
           case 'Cluster naively':
             await clusterNaively();
             break;
-          case 'MST':
-            await computeMST();
+          case 'Christofides':
+            await christofides();
             break;
           default:
             isRunning = false;
       }
+      isRunning = false;
             //christofides();
     }
 
@@ -356,7 +359,7 @@ const sketch = (p) => {
      */
     function addEdge (node1, node2, weight) {
       if (node1.index == node2.index)
-      throw('nodes cannot be the same');
+        throw('nodes cannot be the same');
       graph.addEdge(node1, node2, weight);
     }
     
@@ -577,14 +580,128 @@ const sketch = (p) => {
 
     async function christofides() {
       await computeMST();
-      let nodesWithOddDegree = getNodesWithOddDegree(graph);  
-      await findPerfectMatchingMinWeight();
-      let edge = new Edge(nodesWithOddDegree[0], nodesWithOddDegree[1], euclidDistance(nodesWithOddDegree[0], nodesWithOddDegree[1]));
-      //console.log('there are nodes with odd degree: ' + nodesWithOddDegree.length);
-      edge.color = 255;
-      graph.addEdgeFromEdge(edge);
-      //min-cost-max matching is harder than I thought...
+
+
+      let nodesWithOddDegree = await getNodesWithOddDegree(graph);  
+
+      for (var node of nodesWithOddDegree) {
+        await delay(3000);
+        console.log("yoo");
+        node.color = "#ae2a0d";
+      }
+      // await delay(15000);
+      await findPerfectMatchingMinWeight(nodesWithOddDegree);
+      await findEulerianCycle();
+    
+      for (node of eulerCycle) {
+        console.log(node.index+  "-");
+      }
+      let included = new Array(graph.V).fill(false);
+      var curNode = eulerCycle.pop();
+      var temp = curNode;
+      // we have to go back to this one in the end
+      var first = curNode;
+      included[curNode.index] = true;
+      while (eulerCycle.length > 0) {
+        curNode = eulerCycle.pop();
+        if (!included[curNode.index]) {
+          included[curNode.index] = true;
+          console.log("Now adding: " + temp.index +" to " + curNode.index);
+          addEdge(temp, curNode, euclidDistance(temp, curNode));
+          temp = curNode;
+        }
+      }
+      console.log("Now adding: " + curNode.index +" to " + first.index);
+
+      addEdge(temp, first, euclidDistance(curNode, first));
+      // let edge = new Edge(nodesWithOddDegree[0], nodesWithOddDegree[1], euclidDistance(nodesWithOddDegree[0], nodesWithOddDegree[1]));
+      // //console.log('there are nodes with odd degree: ' + nodesWithOddDegree.length);
+      // edge.color = 255;
+      // graph.addEdgeFromEdge(edge);
       
+    }
+
+    async function findEulerianCycle() {
+      // Find a vertex with odd degree
+      let v = graph.getNodes()[0];
+      for (var node of graph.getNodes()) {
+        if (graph.getNeighbors(node).length % 2== 1) {
+          v = node;
+          break;
+        }
+      }
+      // Print tour starting from oddv
+      await printEulerUtil(v);
+    
+    }
+
+    async function printEulerUtil(v) {
+      console.log("Pushing: " + v.index);
+      eulerCycle.push(v);
+
+      //Print Euler tour starting from vertex u
+    
+      // Recur for all the vertices adjacent to
+      // this vertex
+      for (let node of graph.getNeighbors(v)) {
+        await delay(3000);
+        // If edge u-v is not removed and it's a
+        // valid next edge
+        if (await isValidNextEdge(v, node)) {
+          console.log(v.index + "-" + node.index);
+          graph.removeEdge(v, node);
+          await printEulerUtil(node);
+          break;
+        }
+      }
+    }
+
+
+    // The function to check if edge u-v can be considered
+    // as next edge in Euler Tout
+    async function isValidNextEdge(u, v) {
+      // The edge u-v is valid in one of the following
+      // two cases:
+      // 1) If v is the only adjacent vertex of u
+      let count = graph.getNeighbors(u).length; 
+      if (count == 1) 
+        return true;
+
+      // 2) If there are multiple adjacents, then u-v
+      //    is not a bridge
+      // Do following steps to check if u-v is a bridge
+      
+      // 2.a) count of vertices reachable from u
+      let visited = new Array(graph.V);
+      visited.fill(false);
+      let count1 = await DFSCount(u, visited);
+      
+      // 2.b) Remove edge (u, v) and after removing
+      // the edge, count vertices reachable from u
+      graph.removeEdge(u, v);
+      visited.fill(false);
+      let count2 = await DFSCount(u, visited);
+
+      // 2.c) Add the edge back to the graph
+      graph.addEdge(u, v, euclidDistance(u, v));
+      // 2.d) If count1 is greater, then edge (u, v)
+      // is a bridge
+      return count1 > count2 ? false : true;
+    }
+
+
+    async function DFSCount(v, visited) {
+      // Mark the current node as visited
+      visited[v.index] = true;
+      let count = 1;
+      
+      // Recur for all vertices adjacent to this vertex
+      
+      for (let node of graph.getNeighbors(v)) {
+        if (!visited[node.index]) 
+          count += await DFSCount(node, visited);
+      }
+      return count;
     }
 
     /**
@@ -592,14 +709,37 @@ const sketch = (p) => {
      * @param {Node} {even number of nodes} 
      */
     async function findPerfectMatchingMinWeight(nodes) {
+      var edmondsEdges = [];
+      for (var i = 0; i< nodes.length-1; ++i) {
+        for (var j = i+1; j < nodes.length; ++j) {
+          var v = nodes[i];
+          var w = nodes[j];
+          var weight = euclidDistance(v, w);
+          edmondsEdges.push([v.index, w.index, - weight])
+        }
+      }
+      var edmonds = new Edmonds(edmondsEdges);
 
+      var result = edmonds.maxWeightMatching();
+      
+      console.log(result)
 
+      for (var i = 0; i < result.length; ++i) {
+        var indexV = i;
+        var indexW = result[i];
+        var v = graph.getNodes().find(node => node.index === indexV);
+        var w = graph.getNodes().find(node => node.index === indexW);
+        if (indexV < indexW) {
+          addEdge(v, w, euclidDistance(v, w));
+        }
+      }
     } 
 
-    function getNodesWithOddDegree(g) {
+    async function getNodesWithOddDegree(g) {
+      // g.printGraph();
       let out = [];
-      for (let node of g.getNodes()) {
-        if (g.getNeighbors(node).length % 2 == 1){
+      for (let node of graph.getNodes()) {
+        if (graph.getNeighbors(node).length % 2 == 1){
           out.push(node);
         }
       }
@@ -624,6 +764,7 @@ const sketch = (p) => {
         addEdge(root, node, weight);
         included[node.index] = true;
         updateDistances(node, distTo);
+        graph.printGraph();
         await delay(300);
       }
     }
