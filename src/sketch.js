@@ -14,6 +14,7 @@ let totalGraph = new Graph(0);
 let startDefined = false;
 let algo = "Not Defined";
 let localSearch = "Not defined";
+let isPlaying = true;
 // state is 0 if no path found yet
 // 1 if we already have a solution (that we might want to improve)
 let state = 0;
@@ -25,7 +26,7 @@ const sketch = (p) => {
   let isRunning = false;
   let clearingBoard = false;
   //let algoFinished = false;
-
+  let setIsPlaying = p.setIsPlaying;
 
   p.setup = () => {
     p.createCanvas(WIDTH, HEIGHT);
@@ -62,6 +63,11 @@ const sketch = (p) => {
     //if we did not find any solution yet, we will run a algorithm to find inital solution
     if (state == 0) {
       if (isRunning) {
+        console.log("Starting here");
+
+        isRunning = false;
+        setIsPlaying(true);
+        isPlaying = true;
         isRunning = false;
         switch(algo) {
           case 'Nearest Insertion':
@@ -88,18 +94,33 @@ const sketch = (p) => {
             default:
               isRunning = false;
         }
+        setIsPlaying(false);
+        isPlaying = false;
+        isRunning = false;
         state = 1;
       }
     }
     if (state == 1) {
       if (isRunning) {
+        console.log("Starting here");
+        isRunning = false;
+        setIsPlaying(true);
+        isPlaying = true;
         isRunning = false;
         switch (localSearch) {
           case '2-opt':
             await twoOpt();
             break;
           default:
+          case '3-opt':
+            await threeOpt();
+            break;
+          
         }
+        setIsPlaying(false);
+        isPlaying = false;
+        isRunning = false;
+
       }
     }
 
@@ -132,6 +153,26 @@ const sketch = (p) => {
     }
   }
 
+  // async function waitForIsPlaying() {
+  //   if (isPlaying)
+  //     return;
+  //   delay(1000);
+  //   await waitForIsPlaying();
+  // }
+
+  async function waitForIsPlaying() {
+    return new Promise(resolve => {
+      function checkIsPlaying() {
+        if (isPlaying) {
+          resolve();
+        } else {
+          setTimeout(checkIsPlaying, 300);
+        }
+      }
+      checkIsPlaying();
+    });
+  }
+  
 
   function removeAllEdges() {
     let tempGraph = new Graph(0);
@@ -176,9 +217,11 @@ const sketch = (p) => {
         }
         state = 0;
       }
+      setIsPlaying = newProps.setIsPlaying;
       addingNodes = newProps.addingNodes;
       isRunning = newProps.isRunning;
       clearingBoard = newProps.clearinBoard;
+      isPlaying = newProps.isPlaying;
       if (clearingBoard) {
         startNode = new Node(WIDTH / 2, HEIGHT / 2, 0, []);
         count = 1; //count the nodes
@@ -208,6 +251,7 @@ const sketch = (p) => {
 */
 
 async function delay(time) {
+  await waitForIsPlaying();
   return new Promise(resolve => setTimeout(resolve, time/speed));
 }
     
@@ -264,6 +308,7 @@ async function delay(time) {
 
       //we know how many nodes well have to add, so for loop
       for (let i = 0; i< graph.V-3; ++i) {
+        await waitForIsPlaying();
         let arr = null;
         switch(mode) {
           case "nearest":
@@ -405,6 +450,7 @@ async function delay(time) {
       //adj.push(curNode);
       let nonIncludedNodes = getNonIncludedNodes(included);
       for (let i = 0; i < nonIncludedNodes.length; ++i) {
+        await waitForIsPlaying();
         let node = findNode(curNode, included, "closest");
         //add an edge between node and curNode
         let weight = euclidDistance(node, curNode);
@@ -488,6 +534,7 @@ async function delay(time) {
       let minTime = Number.MAX_VALUE;
       let bestNeighbor = null;
       for (let neighbor of neighbors) {
+        await waitForIsPlaying();
         let includedCopy = JSON.parse(JSON.stringify(included));
         let tempGraph = copyGraph(graph);
         addEdge(curNode, neighbor, euclidDistance(curNode, neighbor));
@@ -516,6 +563,8 @@ async function delay(time) {
         let nonIncludedNodes = getNonIncludedNodes(included);
         //iterate through all non-included nodes
         for (let v of nonIncludedNodes) {
+          await waitForIsPlaying();
+
           let tempGraph = copyGraph(graph);
           let includedCopy = JSON.parse(JSON.stringify(included));
           addEdge(curNode, v, euclidDistance(curNode, v));
@@ -605,13 +654,16 @@ async function delay(time) {
       await computeMST();
 
 
-      let nodesWithOddDegree = await getNodesWithOddDegree(graph);  
+      let nodesWithOddDegree = getNodesWithOddDegree(graph);  
 
       for (var node of nodesWithOddDegree) {
         node.color = "#ae2a0d";
       }
       // await delay(15000);
       await findPerfectMatchingMinWeight(nodesWithOddDegree);
+      for (var node of nodesWithOddDegree) {
+        node.color = "#fff";
+      }
       await findEulerianCycle();
     
       // for (node of eulerCycle) {
@@ -624,6 +676,7 @@ async function delay(time) {
       var first = curNode;
       included[curNode.index] = true;
       while (eulerCycle.length > 0) {
+        await waitForIsPlaying();
         curNode = eulerCycle.pop();
         if (!included[curNode.index]) {
           included[curNode.index] = true;
@@ -645,6 +698,7 @@ async function delay(time) {
     }
 
     async function findEulerianCycle() {
+      await waitForIsPlaying();
       // Find a vertex with odd degree
       let v = graph.getNodes()[0];
       for (var node of graph.getNodes()) {
@@ -659,6 +713,7 @@ async function delay(time) {
     }
 
     async function printEulerUtil(v) {
+      await waitForIsPlaying();
       eulerCycle.push(v);
 
       //Print Euler tour starting from vertex u
@@ -666,7 +721,7 @@ async function delay(time) {
       // Recur for all the vertices adjacent to
       // this vertex
       for (let node of graph.getNeighbors(v)) {
-        await delay(3000);
+        await delay(500);
         // If edge u-v is not removed and it's a
         // valid next edge
         if (await isValidNextEdge(v, node)) {
@@ -741,6 +796,7 @@ async function delay(time) {
       var edmondsEdges = [];
       for (var i = 0; i< nodes.length-1; ++i) {
         for (var j = i+1; j < nodes.length; ++j) {
+          await waitForIsPlaying();
           var v = nodes[i];
           var w = nodes[j];
           var weight = euclidDistance(v, w);
@@ -787,6 +843,7 @@ async function delay(time) {
       updateDistances(startNode, distTo);
       //adding V nodes to MST
       for (let i = 0; i< graph.V-1; ++i) {
+        await waitForIsPlaying();
         let node = shortestAddableNodeToIncluded(distTo, included);
         let [weight, root] = findClosestNode(node, getIncludedNodes(included));
         addEdge(root, node, weight);
@@ -879,30 +936,32 @@ async function delay(time) {
       path[j].color = "#0f61e8";
       path[j+1].color = "#0f61e8";
 
-      path[i].color = "#0f61e8";
-      path[j+1].color = "#0f61e8";
-      path[j].color = "#0f61e8";
-      path[i+1].color = "#0f61e8";
-      
-
 
       // find out why not defined sometimes!
       let oldEdge1 = graph.findEdge(path[i], path[i+1]);
       let oldEdge2 = graph.findEdge(path[j], path[j+1]);
       oldEdge1.color = "#0f61e8";
       oldEdge2.color = "#0f61e8";
-      await delay(3000);
+      await waitForIsPlaying();
+
+      await delay(2000);
       let newEdge1 = new Edge(path[i], path[j], euclidDistance(path[i], path[j]));
       newEdge1.color = "#ae2a0d";
       let newEdge2 = new Edge(path[i+1], path[j+1], euclidDistance(path[i+1], path[j+1]));
       newEdge2.color = "#ae2a0d";
-      await delay(3000);
+      await waitForIsPlaying();
+
+      await delay(2000);
       graph.addEdgeFromEdge(newEdge1);
       graph.addEdgeFromEdge(newEdge2);
-      await delay(3000);
+      await waitForIsPlaying();
+
+      await delay(2000);
       removeEdge(path[i], path[i+1]);
       removeEdge(path[j], path[j+1]);
-      await delay(4000);
+      await waitForIsPlaying();
+
+      await delay(2000);
       newEdge1.color = "#000000";
       newEdge2.color = "#000000";
 
@@ -916,20 +975,20 @@ async function delay(time) {
       path[j+1].color = "#fff";
       path[j].color = "#fff";
       path[i+1].color = "#fff";
-      await delay(3000);
 
 
     }
 
+
     async function twoOpt() {
       let foundImprovement = true;
       let path = getPath();
-      let curLength = getLength(path);
       let n = path.length;
       while (foundImprovement) {
         foundImprovement = false;
         for (let i = 0; i < n - 2; i++) {
           for (let j = i + 1; j < n-1; j++) {
+            await waitForIsPlaying();
             // first subtract new lengths
             var gain = -euclidDistance(path[i], path[j]);
             gain -= euclidDistance(path[i+1], path[j+1]);
@@ -939,7 +998,7 @@ async function delay(time) {
             // If old length is greater than new length
             if (gain > 1e-4) {
               await do2Opt(path, i, j);
-              curLength -= gain;
+              // curLength -= gain;
               foundImprovement = true;
               path = getPath();
             }
@@ -947,6 +1006,120 @@ async function delay(time) {
           }
         }
       }
+    }
+
+    async function threeOpt() {
+      let foundImprovement = true;
+      let path = getPath();
+      let n = path.length;
+      while (foundImprovement) {
+        foundImprovement = false;
+        for (let i = 0; i < n - 3; ++i) {
+          for (let j = i + 1; j < n-2; ++j) {
+            for (let k = j+1; k < n-1; ++k) {
+              await waitForIsPlaying();
+
+              // first subtract new lengths
+              var gain = await gainOfBest3OptWiring(path, i, j, k);
+              // If old length is greater than new length
+              if (gain > 1e-4) {
+                // curLength -= gain;
+                foundImprovement = true;
+                path = getPath();
+              }
+              gain = 0;
+            }
+          }
+        }
+      }
+    }
+
+    async function gainOfBest3OptWiring(path, i, j, k) {
+      // (a,b) are one edge, (c,d) and (e,f)
+      let a = path[i];
+      let b = path[i+1];
+      let c  = path[j];
+      let d = path[j+1];
+      let e = path[k];
+      let f = path[k+1];
+
+      // this has good picture for all permutations: http://tsp-basics.blogspot.com/2017/03/3-opt-move.html 
+      // a going to b
+      let w0 = [a, b, c, d, e, f]; //that is original wiring
+      let w1 = [a, b, c, e, d, f];
+      // a going to c
+      let w2 = [a, c, b, d, e, f];
+      let w3 = [a, c, b, e, d, f];
+      // a going to d
+      let w4 = [a, d, e, b, c, f];
+      let w5 = [a, d, e, c, b, f];
+      // a going to e
+      let w6 = [a, e, d, b, c, f];
+      let w7 = [a, e, d, c, b, f];
+      let alternativeOptions = [w1, w2, w3, w4, w5, w6, w7];
+      let shortestWiring = w0;
+      let originalLength = length3OptWiring(w0);
+      let shortestLength = originalLength;
+      for (let option of alternativeOptions) {
+        await waitForIsPlaying();
+        let length = length3OptWiring(option);
+        if (shortestLength > length) {
+          shortestLength = length;
+          shortestWiring = option;
+        }
+      }
+
+      if (originalLength > shortestLength) { 
+        a.color = "#0f61e8";
+        b.color = "#0f61e8";
+        c.color = "#0f61e8";
+        d.color = "#0f61e8";
+        e.color = "#0f61e8";
+        f.color = "#0f61e8";
+        let oldEdge1 = graph.findEdge(a, b);
+        oldEdge1.color = "#0f61e8";
+        let oldEdge2 = graph.findEdge(c, d);
+        oldEdge2.color = "#0f61e8";
+        let oldEdge3 = graph.findEdge(e, f);
+        oldEdge3.color = "#0f61e8";
+        await delay(2000);
+        //color new edges and add them
+        let newEdge1 =new Edge(shortestWiring[0], shortestWiring[1], euclidDistance(shortestWiring[0], shortestWiring[1]));
+        let newEdge2 = new Edge(shortestWiring[2], shortestWiring[3], euclidDistance(shortestWiring[2], shortestWiring[3]));
+        let newEdge3 = new Edge(shortestWiring[4], shortestWiring[5], euclidDistance(shortestWiring[4], shortestWiring[5]));
+        newEdge1.color = "#ae2a0d";
+        newEdge2.color = "#ae2a0d";
+        newEdge3.color = "#ae2a0d";
+        graph.addEdgeFromEdge(newEdge1);
+        graph.addEdgeFromEdge(newEdge2);
+        graph.addEdgeFromEdge(newEdge3);
+        await delay(2000);
+        removeEdge(a, b);
+        removeEdge(c, d);
+        removeEdge(e, f);
+        await delay(1000);
+        newEdge1.color = "#000000";
+        newEdge2.color = "#000000";
+        newEdge3.color = "#000000";
+        a.color = "#fff";
+        b.color = "#fff";
+        c.color = "#fff";
+        d.color = "#fff";
+        e.color = "#fff";
+        f.color = "#fff";
+
+      }
+      
+      return originalLength - shortestLength;
+
+    }
+
+    function length3OptWiring(wiring) {
+      let length = 0;
+      for (let i = 0; i < 6; i+=2) {
+        length += euclidDistance(wiring[i], wiring[i+1]);
+      }
+      return length;
     }
 
     /**

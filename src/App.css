@@ -1,52 +1,114 @@
-.dropdownContainer {
-  background-color: #dcdcde;
+html {
+  box-sizing: border-box;
 }
 
-.dropdown {
-  width: 25%;
-  height: 100%;
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
 }
 
-.sliderContainer {
-  
-  padding: 1em;
-  height: 10%;
-  background-color: #dcdcde;
-  overflow: hidden;
-}
-
-.slider {
-  border-style: solid;
-  height: 100%;
-  width: 20%;
-  color:#807a78;
-  cursor: grab;
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  font-size: 16px;
+  color: #333;
+  background-color: #f7f7f7;
 }
 
 .banner {
-  background: #536872;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 80px;
+  background-color: rgb(9, 9, 150);
+}
+
+.example-track {
+  height: 4px;
+  background-color: #ddd;
+  border-radius: 4px;
 }
 
 .banner__container {
-  /*justify-content: space-between;*/
-  height: 80px;
-  z-index: 1;
-  width: 100%;
-  max-width: 1800px;
-  margin: 0 auto;
-  padding: 0 50px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 #banner {
-  height: 80px;
-  background-color: #d68542;
+  color: #fff;
+  font-size: 32px;
+  font-weight: bold;
+}
+
+
+.dropdownContainer {
   display: flex;
-  /*background-image: linear-gradient(to top, #4891c1 0%, #2378e1 100%);*/
-  background-size: 100%;
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
   align-items: center;
+  margin: 10px;
+}
+
+.dropdown {
+  width: 250px;
+  margin-right: 10px;
+}
+
+.sliderContainer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+}
+
+#slider-label {
+  margin-bottom: 5px;
+}
+
+.slider {
+  width: 200px;
+  height: 20px;
+  margin-top: 5px;
+}
+
+.Main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.p5Canvas {
+  border: 1px solid #333;
+}
+
+.Buttons {
+  display: flex;
   justify-content: center;
-  text-decoration: none;
-  font-size: 2rem;
+  align-items: center;
+  margin: 20px;
+}
+
+.RunButton {
+  background-color: rgba(38, 105, 136, 0.713);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  margin-right: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.example-thumb {
+  background-color: #f1f1f1;
+  border: 2px solid #540b64;
+}
+.PlayButton {
+  background-color: rgba(38, 105, 136, 0.713);
+  height: 50px;
+  margin: 10px;
+}
+
+.RunButton:hover {
+  opacity: 0.8;
 }

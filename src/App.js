@@ -5,6 +5,8 @@ import sketch from "./sketch.js";
 import Select from "react-select";
 import ReactSlider from "react-slider";
 import 'rc-slider/assets/index.css';
+import playButton from './icons8-spielen-100.png'
+import pauseButton from './icons8-stop-100.png'
 
 export function App() {
 
@@ -18,6 +20,8 @@ export function App() {
   const [algo, setSelectedAlgo] = useState("Not Selected");
   const [localSearch, setSelectedLocalSearch] = useState("Not Selected");
   const [speed, setSpeed] = useState(5);
+  const [pathToPic, setPathToPic] = useState(playButton);
+  const [isPlaying, setIsPlaying] = useState(true);
   const algoOptions = [
     { value: "0", label: "Select Algorithm" },
     { value: "1", label: "Nearest Insertion" },
@@ -30,7 +34,8 @@ export function App() {
   ];
   const localSearchOptions = [
     { value: "0", label: "Select Algorithm" },
-    { value: "1", label: "2-opt" }
+    { value: "1", label: "2-opt" },
+    { value: "2", label: "3-opt" }
   ];
   const handleAlgoSelect = (e) => {
     setAddingNodes(false);
@@ -49,6 +54,10 @@ export function App() {
   const [runAlgoText, setRunAlgoText] = useState("Run Algorithm");
   const [localSearchText, setLocalSearchText] = useState("Run Algorithm");
 
+  const handleIsPlayingInP5 = (bool) => {
+    handleSetIsPlaying(bool);
+  }
+
   const handleRunAlgoButton = async () => {
     setAddingNodes(false);
     setClearingBoard(false);
@@ -57,8 +66,11 @@ export function App() {
       setIsRunning(true);
       setRunAlgoText("Remove Edges");
       setLocalSearchText("Run local search");
+      // add stop icon only if we start running the algorithm now
+      setPathToPic(pauseButton);
     }
     else {
+      setPathToPic(playButton);
       setremoveEdges(true);
       setIsRunning(false);
       setRunAlgoText("Run Algorithm");
@@ -75,6 +87,7 @@ export function App() {
     setClearingBoard(false);
     setremoveEdges(false);
     setIsRunning(true); 
+    setPathToPic(pauseButton);
     if (localSearchText == "Run Algorithm") {
       setLocalSearchText("Run local search");
     }
@@ -82,12 +95,53 @@ export function App() {
       setRunAlgoText("Remove Edges");
       // only then will we set isRunning to false, because if we do that we can run local search
       // if we don't set it, we can only run local search again, after it got changed
-      await delay(500);
-      setIsRunning(false); 
     }
 
+    await delay(500);
+      setIsRunning(false); 
+
   };
+
+  const test = () => {
+    console.log("TEst");
+  }
+
+  const handleClickInputButton = async () => {
+    // if we are currently adding nodes, the play button should do the same
+    // as run algo button, and change its icon to square, which can now be clicked to pause
+    // if (!isRunning) {
+    //   handleLocalSearchButton();
+    //   console.log("is playing is: " + isPlaying);
+    //   if (isPlaying)
+    //     setPathToPic(pauseButton);
+    //   else 
+    //     setPathToPic(playButton);
+    // }
+    console.log("is playing is: " + isPlaying + " so setting it to opposite");
+    if (isPlaying) {
+      handleSetIsPlaying(false);
+    }
+    else {
+      handleSetIsPlaying(true);
+    }
   
+  };
+
+  const handleAddNodesButton = () => {
+    setAddingNodes(!addingNodes);
+    setIsRunning(false);
+    setClearingBoard(false);
+  }
+  
+  const handleSetIsPlaying = (bool) => {
+    setIsPlaying(bool);
+    if (bool) {
+      setPathToPic(pauseButton);
+    }
+    else {
+      setPathToPic(playButton);
+    }
+  };
 
   const [removeEdges, setremoveEdges] = useState(false);
 
@@ -147,35 +201,34 @@ export function App() {
 
     <div className = "Main">
       <div className="Canvas">
-        <ReactP5Wrapper sketch={sketch} addingNodes = {addingNodes} isRunning = {isRunning} 
+        <ReactP5Wrapper 
+        className = "p5Canvas" sketch={sketch} addingNodes = {addingNodes} isRunning = {isRunning} 
                       clearinBoard = {clearingBoard} algo = {algo} speed = {speed} removeEdges = {removeEdges}
-                      localSearch = {localSearch} /> 
+                      localSearch = {localSearch} isPlaying = {isPlaying} setIsPlaying = {handleIsPlayingInP5} /> 
       </div>
     </div>
 
   
     <div className = "Buttons">
-      <button ref = {btn} className = "AddNodesButton" 
+      <button ref = {btn} className = "RunButton" 
         onClick={()=>{
-                  setAddingNodes(!addingNodes);
-                  setIsRunning(false);
-                  setClearingBoard(false);
+                  handleAddNodesButton();
                   } }>
                     {addingNodes ? 'Stop adding Nodes' : 'Add Nodes'}
         </button>
-        <button className = "RunAlgoButton" 
+        <button className = "RunButton" 
                 onClick={async ()=>{
                   await handleRunAlgoButton();
                   } }>
                     {runAlgoText}
         </button>
-        <button className = "RunLocalSearchButton" 
+        <button className = "RunButton" 
                 onClick={async ()=>{
                   await handleLocalSearchButton();
                   } }>
                     {localSearchText}
         </button>
-        <button className = "ClearBoardButton" 
+        <button className = "RunButton" 
                 onClick={()=>{
                   setAddingNodes(false);
                   setIsRunning(false);
@@ -183,6 +236,14 @@ export function App() {
                 } }>
           Clear Bord
         </button>
+        <input 
+          type="image"
+          src= {pathToPic}
+          className = "PlayButton"
+          onClick={async ()=>{
+            await handleClickInputButton();
+            } }
+        />
       </div>
       
     </>
