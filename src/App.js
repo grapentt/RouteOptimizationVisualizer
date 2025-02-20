@@ -38,6 +38,7 @@ export function App() {
   const [runAlgoText, setRunAlgoText] = useState("Run Algorithm");
   const [localSearchText, setLocalSearchText] = useState("Run Algorithm");
   const [removeEdges, setRemoveEdges] = useState(false);
+  const [algoHasRun, setAlgoHasRun] = useState(false);
 
   // Helper function for delayed operations
   const delay = (time) => new Promise(resolve => setTimeout(resolve, time / speed));
@@ -46,6 +47,7 @@ export function App() {
     setAddingNodes(false);
     setIsRunning(false);
     setAlgo(e.label);
+    setAlgoHasRun(false);
   };
 
   const handleLocalSearchSelect = (e) => {
@@ -74,12 +76,14 @@ export function App() {
       setRunAlgoText("Remove Edges");
       setLocalSearchText("Run local search");
       setPathToPic(pauseButton);
+      setAlgoHasRun(true);
     } else {
       setPathToPic(playButton);
       setRemoveEdges(true);
       setIsRunning(false);
       setRunAlgoText("Run Algorithm");
       setLocalSearchText("Run Algorithm");
+      setAlgoHasRun(false);
     }
 
     await delay(500);
@@ -104,12 +108,27 @@ export function App() {
     setIsRunning(false);
   };
 
-  const handlePlayPauseButton = () => {
-    if (isPlaying) {
-      handleSetIsPlaying(false);
-    } else {
-      handleSetIsPlaying(true);
+  const handlePlayPauseButton = async () => {
+    if (isRunning) {
+      // If algorithm is running, just toggle play/pause
+      handleSetIsPlaying(!isPlaying);
+      return;
     }
+
+    // If an algorithm is selected but hasn't run yet, run it
+    if (algo !== "Not Selected" && algo !== "Select Algorithm" && !algoHasRun) {
+      await handleRunAlgoButton();
+      return;
+    }
+
+    // If algorithm has run and local search is selected, run local search
+    if (algoHasRun && localSearch !== "Not Selected" && localSearch !== "Select Algorithm") {
+      await handleLocalSearchButton();
+      return;
+    }
+
+    // Otherwise just toggle play/pause state
+    handleSetIsPlaying(!isPlaying);
   };
 
   const handleAddNodesButton = () => {
