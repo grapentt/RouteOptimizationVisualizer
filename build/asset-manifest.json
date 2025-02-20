@@ -1,13 +1,13 @@
 {
   "files": {
-    "main.css": "/RouteOptimizationVisualizer/static/css/main.436e24d1.css",
-    "main.js": "/RouteOptimizationVisualizer/static/js/main.86fba0e5.js",
+    "main.css": "/RouteOptimizationVisualizer/static/css/main.9553ca92.css",
+    "main.js": "/RouteOptimizationVisualizer/static/js/main.120457d3.js",
     "index.html": "/RouteOptimizationVisualizer/index.html",
-    "main.436e24d1.css.map": "/RouteOptimizationVisualizer/static/css/main.436e24d1.css.map",
-    "main.86fba0e5.js.map": "/RouteOptimizationVisualizer/static/js/main.86fba0e5.js.map"
+    "main.9553ca92.css.map": "/RouteOptimizationVisualizer/static/css/main.9553ca92.css.map",
+    "main.120457d3.js.map": "/RouteOptimizationVisualizer/static/js/main.120457d3.js.map"
   },
   "entrypoints": [
-    "static/css/main.436e24d1.css",
-    "static/js/main.86fba0e5.js"
+    "static/css/main.9553ca92.css",
+    "static/js/main.120457d3.js"
   ]
 }

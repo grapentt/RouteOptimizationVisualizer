@@ -16,7 +16,7 @@ body {
   background-color: #f7f7f7;
 }
 
-.banner {
+.header-banner {
   display: flex;
   justify-content: center;
   align-items: center;
@@ -24,109 +24,37 @@ body {
   background-color: rgb(9, 9, 150);
 }
 
-.example-track {
-  height: 4px;
-  background-color: #ddd;
-  border-radius: 4px;
-}
-
-.banner__container {
+.header-container {
   display: flex;
   justify-content: center;
   align-items: center;
 }
 
-#banner {
+.header-title {
   color: #fff;
   font-size: 32px;
   font-weight: bold;
 }
 
-
-.dropdownContainer {
+.dropdown-wrapper {
   display: flex;
   align-items: center;
   margin: 10px;
 }
 
-.dropdown {
-  width: 250px;
-  margin-right: 10px;
-}
-
-.sliderContainer {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  margin: 10px;
-}
-
-#slider-label {
-  margin-bottom: 5px;
-}
-
-.slider {
-  width: 200px;
-  height: 20px;
-  margin-top: 5px;
-}
-
-.Main {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.p5Canvas {
-  border: 1px solid #333;
-}
-
-.Buttons {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin: 20px;
-}
-
-.RunButton {
-  background-color: rgba(38, 105, 136, 0.713);
-  color: #fff;
-  border: none;
-  padding: 10px 20px;
-  margin-right: 10px;
-  cursor: pointer;
-  font-size: 16px;
-  font-weight: bold;
-}
-
-.example-thumb {
-  background-color: #f1f1f1;
-  border: 2px solid #540b64;
-}
-.PlayButton {
-  background-color: rgba(38, 105, 136, 0.713);
-  height: 50px;
-  margin: 10px;
-}
-
-.RunButton:hover {
-  opacity: 0.8;
-}
-
-/* Ensure the container is positioned relatively */
-.select-alert {
+.select-warning {
   position: relative;
-  display: inline-block; /* shrinkwrap around the select */
+  display: inline-block;
 }
 
-.select-alert::after {
+.select-warning::after {
   content: "";
   position: absolute;
   top: -2px;
   left: -2px;
   right: -2px;
   bottom: -2px;
-  border: 3px solid red; /* thicker red border */
+  border: 3px solid red;
   border-radius: 4px;
   pointer-events: none;
   animation: circleBorder 1s ease-in-out 0s 2;
@@ -146,3 +74,109 @@ body {
     opacity: 1;
   }
 }
+
+.dropdown-menu {
+  width: 250px;
+  margin-right: 10px;
+}
+
+.slider-wrapper {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin: 10px;
+}
+#slider-label {
+  margin-bottom: 5px;
+  font-weight: bold;
+  color: #333;
+}
+
+.speed-slider {
+  width: 250px; /* Increase width for better visibility */
+  height: 25px; /* Increase height for a thicker slider */
+  margin-top: 5px;
+  background: #ddd; /* Lighter track color for contrast */
+  border-radius: 12px; /* Rounded track for a modern look */
+  border: 2px solid #ccc; /* Subtle border around the track */
+}
+
+.speed-slider .react-slider-track {
+  background-color: #4caf50; /* Green color for the track */
+  height: 10px; /* Thicker track */
+  border-radius: 10px; /* Smooth track edges */
+}
+
+.speed-slider .react-slider-thumb {
+  background-color: #008cba; /* Blue thumb color */
+  border-radius: 50%; /* Circular thumb for better appearance */
+  width: 30px; /* Larger thumb size */
+  height: 30px; /* Larger thumb size */
+  border: 2px solid #fff; /* White border around the thumb for contrast */
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); /* Subtle shadow for 3D effect */
+}
+
+.speed-slider .react-slider-thumb:hover {
+  background-color: #005f6b; /* Darker thumb color on hover */
+}
+
+
+.main-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.canvas-container {
+  border: 1px solid #333;
+}
+
+.button-group {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin: 20px;
+}
+
+.action-button {
+  background-color: rgba(38, 105, 136, 0.713);
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  margin-right: 10px;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.add-nodes-button {
+  margin-right: 10px;
+}
+
+.run-algorithm-button {
+  margin-right: 10px;
+}
+
+.run-local-search-button {
+  margin-right: 10px;
+}
+
+.play-button {
+  height: 50px;
+  margin: 10px;
+}
+
+.action-button:hover {
+  opacity: 0.8;
+}
+
+.play-pause-button {
+  cursor: pointer;
+}
+
+/* Adjust styles for the Select dropdown if needed */
+.algorithm-select,
+.local-search-select {
+  width: 250px;
+}
+

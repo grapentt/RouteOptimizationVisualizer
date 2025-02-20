@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from "react";
 import { ReactP5Wrapper } from "react-p5-wrapper";
 import Select from "react-select";
+import { tutorialSteps } from './tutorialSteps.js';
 import ReactSlider from "react-slider";
+import Tour from "reactour";
 import sketch from "./sketch.js";
 import playButton from './icons8-spielen-100.png';
 import pauseButton from './icons8-stop-100.png';
@@ -40,6 +42,11 @@ export function App() {
   const [removeEdges, setRemoveEdges] = useState(false);
   const [algoHasRun, setAlgoHasRun] = useState(false);
   const [showAlert, setShowAlert] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(true);
+
+  const closeTour = () => {
+    setIsTourOpen(false);
+  };
 
   // Helper function for delayed operations
   const delay = (time) => new Promise(resolve => setTimeout(resolve, time / speed));
@@ -167,54 +174,58 @@ export function App() {
 
   return (
     <>
-      <header className="banner">
-        <div className="banner__container">
-          <h1>Route Optimization Visualizer</h1>
+      {/* Header Banner */}
+      <header className="header-banner">
+        <div className="header-container">
+          <h1 className="header-title">Route Optimization Visualizer</h1>
         </div>
       </header>
-
-      <div className="dropdownContainer">
-        <div className={showAlert ? "select-alert" : ""}>
+  
+      {/* Algorithm Selection */}
+      <div className="dropdown-wrapper">
+        <div className={showAlert ? "select-warning" : ""}>
           <Select
-            className="dropdown"
+            className="dropdown-menu algorithm-select"
             options={algoOptions}
             onChange={handleAlgoSelect}
             defaultValue={{ label: "Select Algorithm", value: 0 }}
           />
         </div>
       </div>
-
-
-      <div className="dropdownContainer">
+  
+      {/* Local Search Selection */}
+      <div className="dropdown-wrapper">
         <Select
-          className="dropdown"
+          className="dropdown-menu local-search-select"
           options={localSearchOptions}
           onChange={handleLocalSearchSelect}
           defaultValue={{ label: "Select Algorithm", value: 0 }}
         />
       </div>
-
-      <div className="sliderContainer">
+  
+      {/* Speed Slider */}
+      <div className="slider-wrapper">
         <label id="slider-label">Choose speed by sliding</label>
         <ReactSlider
-          className="slider"
+          className="slider-input speed-slider"
           ariaLabelledby="slider-label"
-          thumbClassName="example-thumb"
-          trackClassName="example-track"
+          thumbClassName="slider-thumb"
+          trackClassName="slider-track"
           max={MAX_SPEED}
           renderThumb={(props, state) => <div {...props}>{state.valueNow}</div>}
           defaultValue={INITIAL_SPEED}
           onChange={handleSpeedSelect}
         />
       </div>
-
-      <main className="Main">
-        <div className="Canvas">
+  
+      {/* Canvas Section */}
+      <main className="main-content">
+        <div className="canvas-container">
           <ReactP5Wrapper
             sketch={sketch}
             addingNodes={addingNodes}
             isRunning={isRunning}
-            clearinBoard={clearingBoard}
+            clearingBoard={clearingBoard}
             algo={algo}
             speed={speed}
             removeEdges={removeEdges}
@@ -224,29 +235,30 @@ export function App() {
           />
         </div>
       </main>
-
-      <div className="Buttons">
+  
+      {/* Buttons Section */}
+      <div className="button-group">
         <button
           ref={addNodesButtonRef}
-          className="RunButton"
+          className="action-button add-nodes-button"
           onClick={handleAddNodesButton}
         >
           {addingNodes ? 'Stop adding Nodes' : 'Add Nodes'}
         </button>
         <button
-          className="RunButton"
+          className="action-button run-algorithm-button"
           onClick={handleRunAlgoButton}
         >
           {runAlgoText}
         </button>
         <button
-          className="RunButton"
+          className="action-button run-local-search-button"
           onClick={handleLocalSearchButton}
         >
           {localSearchText}
         </button>
         <button
-          className="RunButton"
+          className="action-button"
           onClick={() => {
             setAddingNodes(false);
             setIsRunning(false);
@@ -258,13 +270,28 @@ export function App() {
         <input
           type="image"
           src={pathToPic}
-          className="PlayButton"
+          className="play-button play-pause-button"
           onClick={handlePlayPauseButton}
           alt="Play/Pause"
         />
       </div>
+  
+      {/* Tutorial Walkthrough */}
+      <Tour
+        steps={tutorialSteps}
+        isOpen={isTourOpen}
+        onRequestClose={closeTour}
+        showNumber={false}
+        showButtons={true}
+        showNavigation={true}
+        showNavigationNumber={false}
+        nextButton="Next"
+        prevButton="Previous"
+        lastStepNextButton="Finish"
+        accentColor="#5cb85c"
+      />
     </>
-  );
+  );  
 }
 
 export default App;
