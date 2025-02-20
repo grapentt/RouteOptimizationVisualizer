@@ -220,7 +220,7 @@ const sketch = (p) => {
       setIsPlaying = newProps.setIsPlaying;
       addingNodes = newProps.addingNodes;
       isRunning = newProps.isRunning;
-      clearingBoard = newProps.clearinBoard;
+      clearingBoard = newProps.clearingBoard;
       isPlaying = newProps.isPlaying;
       if (clearingBoard) {
         startNode = new Node(WIDTH / 2, HEIGHT / 2, 0, []);
