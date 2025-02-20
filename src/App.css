@@ -112,3 +112,37 @@ body {
 .RunButton:hover {
   opacity: 0.8;
 }
+
+/* Ensure the container is positioned relatively */
+.select-alert {
+  position: relative;
+  display: inline-block; /* shrinkwrap around the select */
+}
+
+.select-alert::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  border: 3px solid red; /* thicker red border */
+  border-radius: 4px;
+  pointer-events: none;
+  animation: circleBorder 1s ease-in-out 0s 2;
+}
+
+@keyframes circleBorder {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.5;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}

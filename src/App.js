@@ -39,6 +39,7 @@ export function App() {
   const [localSearchText, setLocalSearchText] = useState("Run Algorithm");
   const [removeEdges, setRemoveEdges] = useState(false);
   const [algoHasRun, setAlgoHasRun] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
 
   // Helper function for delayed operations
   const delay = (time) => new Promise(resolve => setTimeout(resolve, time / speed));
@@ -66,7 +67,21 @@ export function App() {
     setPathToPic(bool ? pauseButton : playButton);
   };
 
+  const checkAlgorithmSelected = () => {
+    if (algo === "Not Selected" || algo === "Select Algorithm") {
+      setShowAlert(true);
+      console.log("Alert");
+      setTimeout(() => setShowAlert(false), 3000); // Hide alert after 3 seconds
+      return false;
+    }
+    return true;
+  };
+
   const handleRunAlgoButton = async () => {
+    if (runAlgoText === "Run Algorithm" && !checkAlgorithmSelected()) {
+      return;
+    }
+
     setAddingNodes(false);
     setClearingBoard(false);
     
@@ -91,6 +106,10 @@ export function App() {
   };
 
   const handleLocalSearchButton = async () => {
+    if (!checkAlgorithmSelected()) {
+      return;
+    }
+
     setAddingNodes(false);
     setClearingBoard(false);
     setRemoveEdges(false);
@@ -110,24 +129,24 @@ export function App() {
 
   const handlePlayPauseButton = async () => {
     if (isRunning) {
-      // If algorithm is running, just toggle play/pause
       handleSetIsPlaying(!isPlaying);
       return;
     }
 
-    // If an algorithm is selected but hasn't run yet, run it
     if (algo !== "Not Selected" && algo !== "Select Algorithm" && !algoHasRun) {
       await handleRunAlgoButton();
       return;
     }
 
-    // If algorithm has run and local search is selected, run local search
     if (algoHasRun && localSearch !== "Not Selected" && localSearch !== "Select Algorithm") {
       await handleLocalSearchButton();
       return;
     }
 
-    // Otherwise just toggle play/pause state
+    if (!algoHasRun && !checkAlgorithmSelected()) {
+      return;
+    }
+
     handleSetIsPlaying(!isPlaying);
   };
 
@@ -155,13 +174,16 @@ export function App() {
       </header>
 
       <div className="dropdownContainer">
-        <Select
-          className="dropdown"
-          options={algoOptions}
-          onChange={handleAlgoSelect}
-          defaultValue={{ label: "Select Algorithm", value: 0 }}
-        />
+        <div className={showAlert ? "select-alert" : ""}>
+          <Select
+            className="dropdown"
+            options={algoOptions}
+            onChange={handleAlgoSelect}
+            defaultValue={{ label: "Select Algorithm", value: 0 }}
+          />
+        </div>
       </div>
+
 
       <div className="dropdownContainer">
         <Select
