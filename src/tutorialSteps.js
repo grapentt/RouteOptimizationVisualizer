@@ -13,7 +13,7 @@ export const tutorialSteps = [
     },
     {
       selector: '.play-pause-button',
-      content: 'Use this button to pause or resume the algorithm visualization.',
+      content: 'Smart Play/Pause button: During execution, it pauses/resumes. When idle, it runs the construction algorithm (if no tour) or local search (if tour exists). It\'s a quick way to continue your workflow!',
     },
     {
       selector: '.speed-slider',
@@ -25,7 +25,11 @@ export const tutorialSteps = [
     },
     {
       selector: '.run-local-search-button',
-      content: 'Click here to run the selected local search algorithm.',
+      content: 'Click here to run the selected local search algorithm. This button is disabled until you have a tour.',
+    },
+    {
+      selector: '.remove-edges-button',
+      content: 'Remove edges while keeping nodes.',
     },
   ];
   
