@@ -23,6 +23,7 @@ export function VisualizationCanvas({
   onLocalSearchComplete,
   onClearComplete,
   onRemoveEdgesComplete,
+  onNodeAdded,
 }) {
   return (
     <main className="main-content">
@@ -40,6 +41,7 @@ export function VisualizationCanvas({
           onLocalSearchComplete={onLocalSearchComplete}
           onClearComplete={onClearComplete}
           onRemoveEdgesComplete={onRemoveEdgesComplete}
+          onNodeAdded={onNodeAdded}
         />
       </div>
     </main>

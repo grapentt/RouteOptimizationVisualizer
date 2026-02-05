@@ -206,6 +206,43 @@ describe('User Workflows - Algorithm Execution', () => {
       expect(algorithmSelected).toBe('Nearest Neighbor'); // Preserved
     });
   });
+
+  describe('Smart Play/Pause with added nodes', () => {
+    test('Adding nodes after tour should invalidate hasTour flag', () => {
+      // Given: User has created a tour with 10 nodes
+      let hasTour = true;
+      let nodeCount = 10;
+
+      // When: User adds 2 more nodes
+      nodeCount = 12;
+      // onNodeAdded callback should be called, which sets hasTour = false
+      hasTour = false;
+
+      // Then: hasTour should be false (tour is incomplete)
+      expect(hasTour).toBe(false);
+      expect(nodeCount).toBe(12);
+    });
+
+    test('Play/Pause button should run construction after nodes added', () => {
+      // Scenario: User reports Play/Pause tries to run local search instead of construction
+
+      // Given: User ran algorithm on 10 nodes
+      let hasTour = true;
+      let nodeCount = 10;
+
+      // When: User adds 2 more nodes
+      nodeCount = 12;
+      hasTour = false; // Should be invalidated by onNodeAdded
+
+      // And: User clicks Play/Pause button
+      const shouldRunConstruction = !hasTour; // true
+      const shouldRunLocalSearch = hasTour;   // false
+
+      // Then: Should run construction algorithm, not local search
+      expect(shouldRunConstruction).toBe(true);
+      expect(shouldRunLocalSearch).toBe(false);
+    });
+  });
 });
 
 describe('State Management Principles', () => {

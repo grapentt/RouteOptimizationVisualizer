@@ -57,7 +57,7 @@ export function createBruteForce(context) {
     let neighbors = getNonIncludedNodes(included);
 
     // Base case: no more nodes to visit, return to start
-    if (neighbors.length == 0) {
+    if (neighbors.length === 0) {
       let weight = distance(startNode, curNode);
       addEdge(startNode, curNode, weight);
       return time + weight;

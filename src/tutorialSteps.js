@@ -29,7 +29,7 @@ export const tutorialSteps = [
     },
     {
       selector: '.remove-edges-button',
-      content: 'Remove all edges while keeping your nodes. Useful for trying different algorithms on the same set of nodes.',
+      content: 'Remove edges while keeping nodes.',
     },
   ];
   

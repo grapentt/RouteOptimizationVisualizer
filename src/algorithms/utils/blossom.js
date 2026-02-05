@@ -146,7 +146,7 @@ export class Edmonds {
             this.allowEdge[deltaEdge] = true;
             var i = this.edges[deltaEdge][0];
             var j = this.edges[deltaEdge][1];
-            var wt = this.edges[deltaEdge][2];
+            // var wt = this.edges[deltaEdge][2];
             if (this.label[this.inBlossom[i]] === 0) {
                 i = i ^ j;
                 j = j ^ i;
@@ -158,7 +158,7 @@ export class Edmonds {
             this.allowEdge[deltaEdge] = true;
             i = this.edges[deltaEdge][0];
             j = this.edges[deltaEdge][1];
-            wt = this.edges[deltaEdge][2];
+            // wt = this.edges[deltaEdge][2];
             //console.assert(this.label[this.inBlossom[i]] == 1);
             this.queue.push(i);
             } else if (deltaType === 4) {
@@ -265,7 +265,7 @@ export class Edmonds {
     addBlossom = function (base, k) {
         var v = this.edges[k][0];
         var w = this.edges[k][1];
-        var wt = this.edges[k][2];
+        // var wt = this.edges[k][2];
         var bb = this.inBlossom[base];
         var bv = this.inBlossom[v];
         var bw = this.inBlossom[w];
@@ -334,7 +334,7 @@ export class Edmonds {
             k = nbList[y];
             var i = this.edges[k][0];
             var j = this.edges[k][1];
-            wt = this.edges[k][2];
+            // wt = this.edges[k][2];
             if (this.inBlossom[j] === b) {
                 i = i ^ j;
                 j = j ^ i;
@@ -626,16 +626,8 @@ export class Edmonds {
     }
 }
 
-  var data = [
-    [0, 1, -6],
-    [0, 2, -10],
-    [1, 2, -5],
-    [2, 3, -7],
-    [1, 3, -2]
-  ];
 
 // var edmonds = new Edmonds(data);
 
 // var result = edmonds.maxWeightMatching();
 
-// console.log(result)

@@ -24,8 +24,8 @@ export class Graph {
      * @param {double} weight
      */
     addEdge(v, w, weight) {
-        if (weight == undefined)
-            throw 'weight is undefined';
+        if (weight === undefined)
+            throw new Error('weight is undefined');
         let e = new Edge(v, w, weight); 
         this.AdjList.get(v).push(e);
         this.AdjList.get(w).push(e);
@@ -85,7 +85,7 @@ export class Graph {
         for (let e of edges) {
             let node1 = e.either();
             let node2 = e.other(node1);
-            if (node1.index == v1.index && node2.index == v2.index || node2.index == v1.index && node1.index == v2.index)
+            if ((node1.index === v1.index && node2.index === v2.index) || (node2.index === v1.index && node1.index === v2.index))
                 return e; 
         }
     }
@@ -144,4 +144,3 @@ export class Graph {
 // // prints all vertex and
 // // its adjacency list
 // g.printGraph();
-

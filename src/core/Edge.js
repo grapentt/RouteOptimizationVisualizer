@@ -19,7 +19,7 @@ export class Edge {
     }
 
     other(node) {
-        if (node.index == this.v.index)
+        if (node.index === this.v.index)
             return this.w;
         return this.v;
     }

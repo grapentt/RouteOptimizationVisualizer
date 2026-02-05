@@ -67,7 +67,6 @@ export function App() {
   };
 
   const handleRunAlgorithm = () => {
-    console.log('[App] Run Algorithm clicked');
 
     // Validate algorithm is selected
     if (algo === "Not Selected" || algo === "Select Algorithm") {
@@ -90,11 +89,9 @@ export function App() {
   };
 
   const handleRunLocalSearch = () => {
-    console.log('[App] Run Local Search clicked');
 
     // Validate tour exists
     if (!hasTour) {
-      console.log('[App] Cannot run local search - no tour exists');
       return;
     }
 
@@ -123,10 +120,8 @@ export function App() {
   };
 
   const handleRemoveEdges = () => {
-    console.log('[App] Remove Edges clicked');
 
     if (!hasTour) {
-      console.log('[App] No tour to remove');
       return;
     }
 
@@ -141,7 +136,6 @@ export function App() {
   };
 
   const handleClearBoard = () => {
-    console.log('[App] Clear Board clicked');
 
     setAddingNodes(false);
     setHasTour(false);
@@ -156,15 +150,12 @@ export function App() {
   };
 
   const handlePlayPause = () => {
-    console.log('[App] Play/Pause clicked - isExecuting:', isExecuting, 'hasTour:', hasTour);
 
     if (isExecuting) {
       // Currently executing: Toggle play/pause
-      console.log('[App] Toggling play/pause during execution');
       handleSetIsPlaying(!isPlaying);
     } else if (!hasTour) {
       // No tour yet: Run construction algorithm (if selected)
-      console.log('[App] No tour - running construction algorithm');
       if (algo === "Not Selected" || algo === "Select Algorithm") {
         setShowAlgoAlert(true);
         setTimeout(() => setShowAlgoAlert(false), 3000);
@@ -173,7 +164,6 @@ export function App() {
       }
     } else if (hasTour) {
       // Has tour: Run local search (if selected)
-      console.log('[App] Has tour - running local search');
       if (localSearch === "Not Selected" || localSearch === "Select Algorithm") {
         setShowLocalSearchAlert(true);
         setTimeout(() => setShowLocalSearchAlert(false), 3000);
@@ -186,7 +176,6 @@ export function App() {
   // ============ CALLBACKS FROM SKETCH ============
 
   const onConstructionComplete = () => {
-    console.log('[App] Construction algorithm completed');
     setIsExecuting(false);
     setHasTour(true);
     setPathToPic(playButton);
@@ -194,20 +183,25 @@ export function App() {
   };
 
   const onLocalSearchComplete = () => {
-    console.log('[App] Local search completed');
     setIsExecuting(false);
     setPathToPic(playButton);
     setSketchCommand(null); // Clear command
   };
 
   const onClearComplete = () => {
-    console.log('[App] Clear board completed');
     setSketchCommand(null); // Clear command
   };
 
   const onRemoveEdgesComplete = () => {
-    console.log('[App] Remove edges completed');
     setSketchCommand(null); // Clear command
+  };
+
+  const onNodeAdded = () => {
+    // When a node is added after a tour exists, invalidate the tour
+    // The tour is no longer complete for all nodes
+    if (hasTour) {
+      setHasTour(false);
+    }
   };
 
   // ============ INITIALIZATION ============
@@ -270,6 +264,7 @@ export function App() {
         onLocalSearchComplete={onLocalSearchComplete}
         onClearComplete={onClearComplete}
         onRemoveEdgesComplete={onRemoveEdgesComplete}
+        onNodeAdded={onNodeAdded}
       />
 
       {/* Buttons Section */}

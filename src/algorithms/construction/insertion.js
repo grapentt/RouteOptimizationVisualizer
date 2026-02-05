@@ -61,7 +61,7 @@ export function createInsertion(context) {
       throw new Error('Invalid Input. Mode is: ' + mode + ' but has to be "closest" or "farthest"');
 
     let curMinOrMax = Number.MAX_VALUE; // min
-    if (mode == "farthest") {
+    if (mode === "farthest") {
       curMinOrMax = Number.MIN_VALUE; // max
     }
     let root = null;
@@ -73,14 +73,14 @@ export function createInsertion(context) {
       // Find closest distance to included nodes
       let [closestDist, potentialRoot] = findClosestNode(node, getIncludedNodes(included));
 
-      if (mode == "closest") {
+      if (mode === "closest") {
         if (closestDist < curMinOrMax) {
           curMinOrMax = closestDist;
           root = potentialRoot;
           closestToRoot = node;
         }
       }
-      if (mode == "farthest") {
+      if (mode === "farthest") {
         if (closestDist > curMinOrMax) {
           curMinOrMax = closestDist;
           root = potentialRoot;
@@ -93,7 +93,7 @@ export function createInsertion(context) {
     let rootEdges = context.graph.AdjList.get(root);
 
     let firstRootNeighbor = rootEdges[0].other(root);
-    if (rootEdges.length == 1)
+    if (rootEdges.length === 1)
       return [root, closestToRoot, firstRootNeighbor];
 
     let secondRootNeighbor = rootEdges[1].other(root);

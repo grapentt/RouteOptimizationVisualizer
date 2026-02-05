@@ -19,8 +19,6 @@ let count = 1; //count the nodes
 let graph = new Graph(0);
 let totalGraph = new Graph(0);
 let startDefined = false;
-let algo = "Not Defined";
-let localSearch = "Not defined";
 let isPlaying = true;
 let eulerCycle = [];
 
@@ -111,12 +109,10 @@ const sketch = (p) => {
   
 
   function removeAllEdges() {
-    console.log(`[removeAllEdges] Before removal - graph.V: ${graph.V}, nodes:`, graph.getNodes().length);
     let tempGraph = new Graph(0);
     for (let node of graph.getNodes()) {
       tempGraph.addVertex(node);
     }
-    console.log(`[removeAllEdges] After rebuild - tempGraph.V: ${tempGraph.V}, nodes:`, tempGraph.getNodes().length);
     graph = tempGraph;
     totalGraph = new Graph(0);
   }
@@ -137,14 +133,17 @@ const sketch = (p) => {
     if (!startDefined) {
       graph.addVertex(startNode);
       startDefined = true;
-      console.log(`[addNodes] Added startNode. graph.V: ${graph.V}`);
     }
     p.loop();
     //if Y is smaller than HEIGHT, the click was outside of canvas (probably on button) and the don't add
     if (p.mouseY < HEIGHT && p.mouseY > 0) {
       let node = new Node(p.mouseX, p.mouseY, count++);
       graph.addVertex(node);
-      console.log(`[addNodes] Added node ${node.index}. graph.V: ${graph.V}, total nodes: ${graph.getNodes().length}`);
+
+      // Notify React that a node was added
+      if (callbacks.onNodeAdded) {
+        callbacks.onNodeAdded();
+      }
     }
   }
 
@@ -154,7 +153,8 @@ const sketch = (p) => {
       onConstructionComplete: null,
       onLocalSearchComplete: null,
       onClearComplete: null,
-      onRemoveEdgesComplete: null
+      onRemoveEdgesComplete: null,
+      onNodeAdded: null
     };
 
     p.updateWithProps = async function (newProps) {
@@ -163,13 +163,14 @@ const sketch = (p) => {
       callbacks.onLocalSearchComplete = newProps.onLocalSearchComplete;
       callbacks.onClearComplete = newProps.onClearComplete;
       callbacks.onRemoveEdgesComplete = newProps.onRemoveEdgesComplete;
+      callbacks.onNodeAdded = newProps.onNodeAdded;
 
       // Update regular props
       setIsPlaying = newProps.setIsPlaying;
       addingNodes = newProps.addingNodes;
       isPlaying = newProps.isPlaying;
-      if (newProps.algo) algo = newProps.algo;
-      if (newProps.localSearch) localSearch = newProps.localSearch;
+      // algo and localSearch are received via props but not used in sketch
+      // The command-based architecture handles algorithm selection in React
       if (newProps.speed) speed = newProps.speed;
       if (speed === 0) speed = 0.0001;
 
@@ -177,7 +178,6 @@ const sketch = (p) => {
       const cmd = newProps.sketchCommand;
       if (cmd && cmd.timestamp !== lastProcessedCommand) {
         lastProcessedCommand = cmd.timestamp;
-        console.log(`[Sketch] Received command:`, cmd.type);
 
         if (cmd.type === 'runConstructionAlgorithm') {
           await executeConstructionAlgorithm(cmd.algorithm);
@@ -195,7 +195,6 @@ const sketch = (p) => {
 
     // Command execution functions
     async function executeConstructionAlgorithm(algorithm) {
-      console.log(`[Sketch] Executing construction algorithm: ${algorithm}`);
 
       // Clear existing edges
       removeAllEdges();
@@ -233,20 +232,17 @@ const sketch = (p) => {
           await christofides();
           break;
         default:
-          console.log(`[Sketch] Unknown algorithm: ${algorithm}`);
       }
 
       setIsPlaying(false);
       isPlaying = false;
 
-      console.log(`[Sketch] Construction algorithm complete`);
       if (callbacks.onConstructionComplete) {
         callbacks.onConstructionComplete();
       }
     }
 
     async function executeLocalSearch(algorithm) {
-      console.log(`[Sketch] Executing local search: ${algorithm}`);
 
       setIsPlaying(true);
       isPlaying = true;
@@ -259,20 +255,17 @@ const sketch = (p) => {
           await threeOptExtracted();
           break;
         default:
-          console.log(`[Sketch] Unknown local search: ${algorithm}`);
       }
 
       setIsPlaying(false);
       isPlaying = false;
 
-      console.log(`[Sketch] Local search complete`);
       if (callbacks.onLocalSearchComplete) {
         callbacks.onLocalSearchComplete();
       }
     }
 
     function executeRemoveEdges() {
-      console.log(`[Sketch] Removing edges`);
 
       // Clear all edges but keep nodes
       removeAllEdges();
@@ -289,7 +282,6 @@ const sketch = (p) => {
     }
 
     function executeClearBoard() {
-      console.log(`[Sketch] Clearing board`);
       startNode = new Node(WIDTH / 2, HEIGHT / 2, 0);
       count = 1;
       graph = new Graph(0);
@@ -300,25 +292,11 @@ const sketch = (p) => {
         callbacks.onClearComplete();
       }
     }
-/*
-    async function runAlgorithm() {
-      for (let i = 0; i < nodes.length; ++i) {
-        adj[i] = nodes[i];
-      }
-      adj[nodes.length] = nodes[0];
-    }
-*/
 
 async function delay(time) {
   await waitForIsPlaying();
   return new Promise(resolve => setTimeout(resolve, time/speed));
 }
-    
-    
-    function displayNodes() {
-      graph.printGraph();
-    }
-
     /**
      * Find the closest node to a given node from a list of nodes
      * @param {Node} node
@@ -386,8 +364,10 @@ async function delay(time) {
     const threeOptExtracted = createThreeOpt(algorithmContext);
 
     // =============================================
-    // OLD ALGORITHMS KEPT FOR CHRISTOFIDES & BACKWARD COMPATIBILITY
+    // HELPER FUNCTIONS & LEGACY ALGORITHMS
     // =============================================
+    // Note: christofides() and clusterNaively() remain here
+    // They use complex helper functions that haven't been extracted yet
 
     async function calculateTravelTime(start) {
       let time = 0;
@@ -431,16 +411,6 @@ async function delay(time) {
       return out;
     }
 
-    function copyGraph(g) {
-      let newGraph = new Graph(0);
-      for (let node of g.getNodes()){
-        newGraph.addVertex(node);
-      }
-      for (let edge of g.getEdges()) {
-        newGraph.addEdgeFromEdge(edge);
-      }
-      return newGraph;
-    }
 
     /**
      * This method finds the closest or farthets Node to curNode, 
@@ -492,7 +462,7 @@ async function delay(time) {
       }
       // await delay(15000);
       await findPerfectMatchingMinWeight(nodesWithOddDegree);
-      for (var node of nodesWithOddDegree) {
+      for (let node of nodesWithOddDegree) {
         node.color = "#fff";
       }
       await findEulerianCycle();
@@ -522,7 +492,7 @@ async function delay(time) {
       // edge.color = 255;
       // graph.addEdgeFromEdge(edge);
 
-      for (var node of nodesWithOddDegree) {
+      for (let node of nodesWithOddDegree) {
         node.color = "#fff";
       }
       
@@ -609,12 +579,6 @@ async function delay(time) {
           count += await DFSCount(node, visited);
       }
       return count;
-      let nodesWithOddDegree = getNodesWithOddDegree(graph);  
-      await findPerfectMatchingMinWeight();
-      let edge = new Edge(nodesWithOddDegree[0], nodesWithOddDegree[1], distance(nodesWithOddDegree[0], nodesWithOddDegree[1]));
-      //console.log('there are nodes with odd degree: ' + nodesWithOddDegree.length);
-      edge.color = 255;
-      graph.addEdgeFromEdge(edge);
       //min-cost-max matching is harder than I thought...
       
     }
@@ -637,15 +601,15 @@ async function delay(time) {
       var edmonds = new Edmonds(edmondsEdges);
 
       var result = edmonds.maxWeightMatching();
-      
 
-      for (var i = 0; i < result.length; ++i) {
-        var indexV = i;
-        var indexW = result[i];
-        var v = graph.getNodes().find(node => node.index ===indexV);
-        var w = graph.getNodes().find(node => node.index ===indexW);
+
+      for (let i = 0; i < result.length; ++i) {
+        let indexV = i;
+        let indexW = result[i];
+        let v2 = graph.getNodes().find(node => node.index === indexV);
+        let w2 = graph.getNodes().find(node => node.index === indexW);
         if (indexV < indexW) {
-          addEdge(v, w, distance(v, w));
+          addEdge(v2, w2, distance(v2, w2));
         }
       }
     } 
@@ -752,14 +716,6 @@ async function delay(time) {
       return path;
     }
 
-    function getLength(path) {
-      let length = 0;
-      let n = path.length;
-      for (let i = 0; i < n-1; ++i) {
-        length += distance(path[i], path[i+1]);
-      }
-      return length;
-    }
 
 
 
@@ -788,7 +744,7 @@ async function delay(time) {
           addEdge(v1, v2, e.weight);
           continue;
         }
-        if (v1.isRoot && !v2.root || v1.root && !v2.root) {
+        if ((v1.isRoot && !v2.root) || (v1.root && !v2.root)) {
             if (v1.isRoot) {
               if (v1.children + 1 < nodesPerCluster) {
                 v2.root = v1;
@@ -802,7 +758,7 @@ async function delay(time) {
             addEdge(v1, v2, e.weight);
             continue;
           }
-        if (v2.isRoot && !v1.root || v2.root && !v1.root) {
+        if ((v2.isRoot && !v1.root) || (v2.root && !v1.root)) {
           if (v2.root.children + 1 < nodesPerCluster) {
             v1.root = v2.root;
             v2.root.children++;

@@ -37,7 +37,7 @@ export function createNearestNeighbor(context) {
    * @returns {Promise<number>} Total travel time
    */
   return async function nearestNeighbor(curNode, included, timeOnlyFromCurNode) {
-    if (timeOnlyFromCurNode == undefined)
+    if (timeOnlyFromCurNode === undefined)
       timeOnlyFromCurNode = false;
 
     let time = 0;
