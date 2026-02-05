@@ -122,24 +122,6 @@ export function App() {
     setAddingNodes(!addingNodes);
   };
 
-  const handleRemoveEdges = () => {
-    console.log('[App] Remove Edges clicked');
-
-    if (!hasTour) {
-      console.log('[App] No tour to remove');
-      return;
-    }
-
-    // Clear tour state
-    setHasTour(false);
-
-    // Send command to sketch
-    setSketchCommand({
-      type: 'removeEdges',
-      timestamp: Date.now()
-    });
-  };
-
   const handleClearBoard = () => {
     console.log('[App] Clear Board clicked');
 
@@ -156,30 +138,18 @@ export function App() {
   };
 
   const handlePlayPause = () => {
-    console.log('[App] Play/Pause clicked - isExecuting:', isExecuting, 'hasTour:', hasTour);
-
     if (isExecuting) {
-      // Currently executing: Toggle play/pause
-      console.log('[App] Toggling play/pause during execution');
+      // Toggle play/pause during execution
       handleSetIsPlaying(!isPlaying);
-    } else if (!hasTour) {
-      // No tour yet: Run construction algorithm (if selected)
-      console.log('[App] No tour - running construction algorithm');
-      if (algo === "Not Selected" || algo === "Select Algorithm") {
-        setShowAlgoAlert(true);
-        setTimeout(() => setShowAlgoAlert(false), 3000);
-      } else {
-        handleRunAlgorithm();
-      }
-    } else if (hasTour) {
-      // Has tour: Run local search (if selected)
-      console.log('[App] Has tour - running local search');
-      if (localSearch === "Not Selected" || localSearch === "Select Algorithm") {
-        setShowLocalSearchAlert(true);
-        setTimeout(() => setShowLocalSearchAlert(false), 3000);
-      } else {
-        handleRunLocalSearch();
-      }
+    } else if (hasTour && localSearch !== "Not Selected" && localSearch !== "Select Algorithm") {
+      // If tour exists and local search selected, run local search
+      handleRunLocalSearch();
+    } else if (algo !== "Not Selected" && algo !== "Select Algorithm") {
+      // If algorithm selected, run it
+      handleRunAlgorithm();
+    } else {
+      // Just toggle play state
+      handleSetIsPlaying(!isPlaying);
     }
   };
 
@@ -202,11 +172,6 @@ export function App() {
 
   const onClearComplete = () => {
     console.log('[App] Clear board completed');
-    setSketchCommand(null); // Clear command
-  };
-
-  const onRemoveEdgesComplete = () => {
-    console.log('[App] Remove edges completed');
     setSketchCommand(null); // Clear command
   };
 
@@ -269,22 +234,19 @@ export function App() {
         onConstructionComplete={onConstructionComplete}
         onLocalSearchComplete={onLocalSearchComplete}
         onClearComplete={onClearComplete}
-        onRemoveEdgesComplete={onRemoveEdgesComplete}
       />
 
       {/* Buttons Section */}
       <ActionButtons
         addingNodes={addingNodes}
-        hasTour={hasTour}
         runAlgoText="Run Algorithm" // Always the same
-        localSearchText="Run Local Search"
+        localSearchText={hasTour ? "Run Local Search" : "Run Local Search (need tour)"}
         localSearchDisabled={!hasTour}
         pathToPic={pathToPic}
         addNodesButtonRef={addNodesButtonRef}
         onAddNodes={handleAddNodes}
         onRunAlgorithm={handleRunAlgorithm}
         onRunLocalSearch={handleRunLocalSearch}
-        onRemoveEdges={handleRemoveEdges}
         onClear={handleClearBoard}
         onPlayPause={handlePlayPause}
       />

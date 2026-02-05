@@ -22,12 +22,19 @@ let startDefined = false;
 let algo = "Not Defined";
 let localSearch = "Not defined";
 let isPlaying = true;
+// state is 0 if no path found yet
+// 1 if we already have a solution (that we might want to improve)
+let state = 0;
 let eulerCycle = [];
 
 const sketch = (p) => {
 
   let addingNodes = false;
+  let isRunning = false;
+  let clearingBoard = false;
+  //let algoFinished = false;
   let setIsPlaying = p.setIsPlaying;
+  let setIsRunning = null; // Will be set via props
 
   p.setup = () => {
     p.createCanvas(WIDTH, HEIGHT);
@@ -41,7 +48,8 @@ const sketch = (p) => {
 
   p.draw = async () => {
     p.background(220);
-    // Draw nodes
+    //draw the nodes
+    //mouse position and already added nodes white
     p.fill("#fff");
     p.circle(p.mouseX, p.mouseY, 10);
     if (startDefined) {
@@ -49,17 +57,90 @@ const sketch = (p) => {
       for (let node of nodes) {
         if (node.color)
           p.fill(node.color);
-        else
+        else 
           p.fill("#fff");
         p.circle(node.x, node.y, 10);
       }
+      //draw edges 
       drawEdges(p);
     }
-    p.fill(255, 0, 200);
-    p.circle(startNode.x, startNode.y, 10);
+     //start node pink
+     p.fill(255, 0, 200);
+     p.circle(startNode.x, startNode.y, 10);
 
-    // Command execution is handled in updateWithProps, not here
-    // This keeps draw loop simple and predictable
+    //if we did not find any solution yet, we will run a algorithm to find inital solution
+    if (state ===0) {
+      if (isRunning) {
+        console.log(`[Algorithm Start] state: ${state}, isRunning: ${isRunning}, graph.V: ${graph.V}, nodes count: ${graph.getNodes().length}, algo: ${algo}`);
+
+        isRunning = false;
+        setIsPlaying(true);
+        isPlaying = true;
+        isRunning = false;
+        switch(algo) {
+          case 'Nearest Insertion':
+            await insertionExtracted("nearest");
+            break;
+            case 'Farthest Insertion':
+              await insertionExtracted("farthest");
+              break;
+            case 'Nearest Neighbor':
+              await nearestNeighborExtracted(startNode, new Array(graph.V).fill(false), false);
+              break;
+            case 'Nearest Neighbor Look Ahead (made up)':
+              await nearestNeighborImprovedExtracted();
+              break;
+            case 'Brute Force':
+              await bruteForceExtracted(startNode, new Array(graph.V).fill(false), 0);
+              break;
+            case 'Cluster naively':
+              await clusterNaively();
+              break;
+            case 'Christofides':
+              await christofides();
+              break;
+            default:
+              isRunning = false;
+        }
+        setIsPlaying(false);
+        isPlaying = false;
+        isRunning = false;
+        state = 1;
+        // Reset React state to prevent auto-triggering local search
+        if (setIsRunning) {
+          setIsRunning(false);
+          console.log('[Algorithm Complete] Set React isRunning to false');
+        }
+      }
+    }
+    if (state ===1) {
+      if (isRunning) {
+        console.log("[Local Search Start] Starting local search");
+        isRunning = false;
+        setIsPlaying(true);
+        isPlaying = true;
+        isRunning = false;
+        switch (localSearch) {
+          case '2-opt':
+            await twoOptExtracted();
+            break;
+          default:
+          case '3-opt':
+            await threeOptExtracted();
+            break;
+          
+        }
+        setIsPlaying(false);
+        isPlaying = false;
+        isRunning = false;
+        // Reset React state after local search completes
+        if (setIsRunning) {
+          setIsRunning(false);
+          console.log('[Local Search Complete] Set React isRunning to false');
+        }
+      }
+    }
+
   };
 
 
@@ -148,157 +229,44 @@ const sketch = (p) => {
     }
   }
 
-    // Command-based props handler
-    let lastProcessedCommand = null;
-    let callbacks = {
-      onConstructionComplete: null,
-      onLocalSearchComplete: null,
-      onClearComplete: null,
-      onRemoveEdgesComplete: null
-    };
+    //this function "sends" data/additional parameters to our function. When ever the props change, the change is passed here
+    p.updateWithProps = function (newProps) {
+      console.log(`[updateWithProps] removeEdges: ${newProps.removeEdges}, isRunning: ${newProps.isRunning}, state: ${state}, algo: ${algo}`);
 
-    p.updateWithProps = async function (newProps) {
-      // Store callbacks
-      callbacks.onConstructionComplete = newProps.onConstructionComplete;
-      callbacks.onLocalSearchComplete = newProps.onLocalSearchComplete;
-      callbacks.onClearComplete = newProps.onClearComplete;
-      callbacks.onRemoveEdgesComplete = newProps.onRemoveEdgesComplete;
-
-      // Update regular props
-      setIsPlaying = newProps.setIsPlaying;
-      addingNodes = newProps.addingNodes;
-      isPlaying = newProps.isPlaying;
-      if (newProps.algo) algo = newProps.algo;
-      if (newProps.localSearch) localSearch = newProps.localSearch;
-      if (newProps.speed) speed = newProps.speed;
-      if (speed === 0) speed = 0.0001;
-
-      // Handle commands
-      const cmd = newProps.sketchCommand;
-      if (cmd && cmd.timestamp !== lastProcessedCommand) {
-        lastProcessedCommand = cmd.timestamp;
-        console.log(`[Sketch] Received command:`, cmd.type);
-
-        if (cmd.type === 'runConstructionAlgorithm') {
-          await executeConstructionAlgorithm(cmd.algorithm);
-        } else if (cmd.type === 'runLocalSearch') {
-          await executeLocalSearch(cmd.algorithm);
-        } else if (cmd.type === 'removeEdges') {
-          executeRemoveEdges();
-        } else if (cmd.type === 'clearBoard') {
-          executeClearBoard();
+      if (newProps.removeEdges) {
+        removeAllEdges();
+        let nodes = graph.getNodes();
+        for (let node of nodes) {
+          node.color = '#fff';
         }
+        state = 0;
+        console.log(`[updateWithProps] After removeEdges - state set to 0, graph.V: ${graph.V}`);
       }
-
+      setIsPlaying = newProps.setIsPlaying;
+      setIsRunning = newProps.setIsRunning;
+      addingNodes = newProps.addingNodes;
+      isRunning = newProps.isRunning;
+      clearingBoard = newProps.clearingBoard;
+      isPlaying = newProps.isPlaying;
+      console.log(`[updateWithProps] After prop updates - isRunning: ${isRunning}, state: ${state}`);
+      if (clearingBoard) {
+        startNode = new Node(WIDTH / 2, HEIGHT / 2, 0, []);
+        count = 1; //count the nodes
+        graph = new Graph(0);
+        startDefined = false;
+        totalGraph = new Graph(0);
+        state = 0;
+      }
+      if (newProps.algo !==algo)
+        algo = newProps.algo;
+      if (newProps.localSearch !==localSearch)
+        localSearch = newProps.localSearch;
+      if (newProps.speed !==speed)
+        speed = newProps.speed;
+      if (speed ===0)
+        speed = 1;
+      //whenever a prop changes we start the loop again (it's only stopped after the path got displayed)
       p.loop();
-    };
-
-    // Command execution functions
-    async function executeConstructionAlgorithm(algorithm) {
-      console.log(`[Sketch] Executing construction algorithm: ${algorithm}`);
-
-      // Clear existing edges
-      removeAllEdges();
-
-      // Reset node colors
-      let nodes = graph.getNodes();
-      for (let node of nodes) {
-        node.color = '#fff';
-      }
-
-      setIsPlaying(true);
-      isPlaying = true;
-
-      // Run the algorithm
-      switch(algorithm) {
-        case 'Nearest Insertion':
-          await insertionExtracted("nearest");
-          break;
-        case 'Farthest Insertion':
-          await insertionExtracted("farthest");
-          break;
-        case 'Nearest Neighbor':
-          await nearestNeighborExtracted(startNode, new Array(graph.V).fill(false), false);
-          break;
-        case 'Nearest Neighbor Look Ahead (made up)':
-          await nearestNeighborImprovedExtracted();
-          break;
-        case 'Brute Force':
-          await bruteForceExtracted(startNode, new Array(graph.V).fill(false), 0);
-          break;
-        case 'Cluster naively':
-          await clusterNaively();
-          break;
-        case 'Christofides':
-          await christofides();
-          break;
-        default:
-          console.log(`[Sketch] Unknown algorithm: ${algorithm}`);
-      }
-
-      setIsPlaying(false);
-      isPlaying = false;
-
-      console.log(`[Sketch] Construction algorithm complete`);
-      if (callbacks.onConstructionComplete) {
-        callbacks.onConstructionComplete();
-      }
-    }
-
-    async function executeLocalSearch(algorithm) {
-      console.log(`[Sketch] Executing local search: ${algorithm}`);
-
-      setIsPlaying(true);
-      isPlaying = true;
-
-      switch (algorithm) {
-        case '2-opt':
-          await twoOptExtracted();
-          break;
-        case '3-opt':
-          await threeOptExtracted();
-          break;
-        default:
-          console.log(`[Sketch] Unknown local search: ${algorithm}`);
-      }
-
-      setIsPlaying(false);
-      isPlaying = false;
-
-      console.log(`[Sketch] Local search complete`);
-      if (callbacks.onLocalSearchComplete) {
-        callbacks.onLocalSearchComplete();
-      }
-    }
-
-    function executeRemoveEdges() {
-      console.log(`[Sketch] Removing edges`);
-
-      // Clear all edges but keep nodes
-      removeAllEdges();
-
-      // Reset node colors
-      let nodes = graph.getNodes();
-      for (let node of nodes) {
-        node.color = '#fff';
-      }
-
-      if (callbacks.onRemoveEdgesComplete) {
-        callbacks.onRemoveEdgesComplete();
-      }
-    }
-
-    function executeClearBoard() {
-      console.log(`[Sketch] Clearing board`);
-      startNode = new Node(WIDTH / 2, HEIGHT / 2, 0);
-      count = 1;
-      graph = new Graph(0);
-      startDefined = false;
-      totalGraph = new Graph(0);
-
-      if (callbacks.onClearComplete) {
-        callbacks.onClearComplete();
-      }
     }
 /*
     async function runAlgorithm() {

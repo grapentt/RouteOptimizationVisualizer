@@ -1,0 +1,284 @@
+import React, { useState, useEffect, useRef } from "react";
+import Tour from "reactour";
+import sketch from "./sketch.js";
+import playButton from './icons8-spielen-100.png';
+import pauseButton from './icons8-stop-100.png';
+import { tutorialSteps } from './tutorialSteps.js';
+import { AlgorithmSelector, LocalSearchSelector, SpeedControl, ActionButtons } from './components/ControlPanel/index.js';
+import { VisualizationCanvas } from './components/Canvas/VisualizationCanvas.js';
+import { ANIMATION } from './constants/config.js';
+import './App.css';
+
+const INITIAL_SPEED = ANIMATION.DEFAULT_SPEED;
+const MAX_SPEED = ANIMATION.MAX_SPEED;
+
+export function App() {
+  const [addingNodes, setAddingNodes] = useState(false);
+  const [isRunning, setIsRunning] = useState(false);
+  const [clearingBoard, setClearingBoard] = useState(false);
+  const [algo, setAlgo] = useState("Not Selected");
+  const [localSearch, setLocalSearch] = useState("Not Selected");
+  const [speed, setSpeed] = useState(INITIAL_SPEED);
+  const [pathToPic, setPathToPic] = useState(playButton);
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [runAlgoText, setRunAlgoText] = useState("Run Algorithm");
+  const [localSearchText, setLocalSearchText] = useState("Run Algorithm");
+  const [removeEdges, setRemoveEdges] = useState(false);
+  const [algoHasRun, setAlgoHasRun] = useState(false);
+  const [showAlert, setShowAlert] = useState(false);
+  const [showLocalSearchAlert, setShowLocalSearchAlert] = useState(false);
+  const [isTourOpen, setIsTourOpen] = useState(true);
+
+  const closeTour = () => {
+    setIsTourOpen(false);
+  };
+
+  // Helper function for delayed operations
+  const delay = (time) => new Promise(resolve => setTimeout(resolve, time / speed));
+
+  const handleAlgoSelect = (e) => {
+    setAddingNodes(false);
+    setIsRunning(false);
+    setAlgo(e.label);
+    setAlgoHasRun(false);
+    setRunAlgoText("Run Algorithm");
+    setLocalSearchText("Run Algorithm");
+  };
+
+  const handleLocalSearchSelect = (e) => {
+    setAddingNodes(false);
+    setIsRunning(false);
+    setLocalSearch(e.label);
+  };
+
+  const handleSpeedSelect = (value) => {
+    setIsRunning(false);
+    setSpeed(value);
+  };
+
+  const handleSetIsPlaying = (bool) => {
+    setIsPlaying(bool);
+    setPathToPic(bool ? pauseButton : playButton);
+  };
+
+  const checkAlgorithmSelected = () => {
+    if (algo === "Not Selected" || algo === "Select Algorithm") {
+      setShowAlert(true);
+      console.log("Alert");
+      setTimeout(() => setShowAlert(false), 3000); // Hide alert after 3 seconds
+      return false;
+    }
+    return true;
+  };
+
+  const handleRunAlgoButton = async () => {
+    console.log(`[handleRunAlgoButton] runAlgoText: "${runAlgoText}", algo: "${algo}"`);
+
+    // If we're about to run the algorithm, check if one is selected
+    if (runAlgoText === "Run Algorithm") {
+      if (!checkAlgorithmSelected()) {
+        console.log('[handleRunAlgoButton] No algorithm selected, returning');
+        return;
+      }
+      // Run the algorithm
+      console.log('[handleRunAlgoButton] Running algorithm - setting isRunning to true');
+      setAddingNodes(false);
+      setClearingBoard(false);
+      setRemoveEdges(false);
+      setIsRunning(true);
+      setRunAlgoText("Remove Edges");
+      setLocalSearchText("Run local search");
+      setPathToPic(pauseButton);
+      setAlgoHasRun(true);
+
+      // Note: Don't reset isRunning here - the draw loop manages it
+      // The algorithm will complete and set state = 1 internally
+    } else {
+      // Remove edges and reset
+      console.log('[handleRunAlgoButton] Removing edges - setting state to ready for new run');
+      setAddingNodes(false);
+      setClearingBoard(false);
+      setRemoveEdges(true);
+      setIsRunning(false);
+      setRunAlgoText("Run Algorithm");
+      setLocalSearchText("Run Algorithm");
+      setPathToPic(playButton);
+      setAlgoHasRun(false);
+
+      await delay(500);
+      setRemoveEdges(false);
+      console.log('[handleRunAlgoButton] Remove edges complete, ready for new algorithm run');
+    }
+  };
+
+  const handleLocalSearchButton = async () => {
+    // Can only run local search if an algorithm has already run
+    if (!algoHasRun) {
+      console.log("Please run an algorithm first before applying local search");
+      return;
+    }
+
+    // Check if local search algorithm is selected
+    if (localSearch === "Not Selected" || localSearch === "Select Algorithm") {
+      console.log("Please select a local search algorithm");
+      setShowLocalSearchAlert(true);
+      setTimeout(() => setShowLocalSearchAlert(false), 3000); // Hide alert after 3 seconds
+      return;
+    }
+
+    setAddingNodes(false);
+    setClearingBoard(false);
+    setRemoveEdges(false);
+    setIsRunning(true);
+    setPathToPic(pauseButton);
+
+    // Update button text if needed
+    if (localSearchText === "Run Algorithm") {
+      setLocalSearchText("Run local search");
+    }
+    if (runAlgoText === "Run Algorithm") {
+      setRunAlgoText("Remove Edges");
+    }
+
+    // Note: Don't reset isRunning here - the draw loop manages it
+  };
+
+  const handlePlayPauseButton = async () => {
+    // If an algorithm is currently running, toggle play/pause
+    if (isRunning) {
+      handleSetIsPlaying(!isPlaying);
+      return;
+    }
+
+    // If algorithm is selected but hasn't run yet, run it
+    if (algo !== "Not Selected" && algo !== "Select Algorithm" && !algoHasRun) {
+      await handleRunAlgoButton();
+      return;
+    }
+
+    // If algorithm has run and local search is selected, run local search
+    if (algoHasRun && localSearch !== "Not Selected" && localSearch !== "Select Algorithm") {
+      await handleLocalSearchButton();
+      return;
+    }
+
+    // Otherwise, just toggle play/pause (though nothing should be running)
+    handleSetIsPlaying(!isPlaying);
+  };
+
+  const handleAddNodesButton = () => {
+    const wasAddingNodes = addingNodes;
+    setAddingNodes(!addingNodes);
+    setIsRunning(false);
+    setClearingBoard(false);
+
+    // If we just enabled adding nodes and an algorithm has already run,
+    // notify that adding nodes will invalidate the current solution
+    if (!wasAddingNodes && algoHasRun) {
+      console.log("Note: Adding more nodes will require running the algorithm again");
+      // Don't automatically invalidate - let user add nodes and they can re-run when ready
+    }
+  };
+
+  const handleClearBoard = () => {
+    // Clear the board and reset all state
+    setAddingNodes(false);
+    setIsRunning(false);
+    setClearingBoard(true);
+    setAlgoHasRun(false);
+    setRunAlgoText("Run Algorithm");
+    setLocalSearchText("Run Algorithm");
+    setPathToPic(playButton);
+    setRemoveEdges(false);
+
+    // Reset clearingBoard flag after a short delay
+    setTimeout(() => setClearingBoard(false), 100);
+  };
+
+  // Initialize board
+  const addNodesButtonRef = useRef();
+  useEffect(() => {
+    const button = addNodesButtonRef.current;
+    button.click();
+    const timer = setTimeout(() => button.click(), 3);
+    return () => clearTimeout(timer);
+  }, []);
+
+  return (
+    <>
+      {/* Header Banner */}
+      <header className="header-banner">
+        <div className="header-container">
+          <h1 className="header-title">Route Optimization Visualizer</h1>
+        </div>
+      </header>
+
+      {/* Algorithm Selection */}
+      <AlgorithmSelector
+        value={algo}
+        onChange={handleAlgoSelect}
+        showAlert={showAlert}
+      />
+
+      {/* Local Search Selection */}
+      <LocalSearchSelector
+        value={localSearch}
+        onChange={handleLocalSearchSelect}
+        showAlert={showLocalSearchAlert}
+      />
+
+      {/* Speed Slider */}
+      <SpeedControl
+        value={INITIAL_SPEED}
+        onChange={handleSpeedSelect}
+        maxSpeed={MAX_SPEED}
+      />
+
+      {/* Canvas Section */}
+      <VisualizationCanvas
+        sketch={sketch}
+        addingNodes={addingNodes}
+        isRunning={isRunning}
+        clearingBoard={clearingBoard}
+        algo={algo}
+        speed={speed}
+        removeEdges={removeEdges}
+        localSearch={localSearch}
+        isPlaying={isPlaying}
+        setIsPlaying={handleSetIsPlaying}
+        setIsRunning={setIsRunning}
+      />
+
+      {/* Buttons Section */}
+      <ActionButtons
+        addingNodes={addingNodes}
+        runAlgoText={runAlgoText}
+        localSearchText={localSearchText}
+        pathToPic={pathToPic}
+        addNodesButtonRef={addNodesButtonRef}
+        onAddNodes={handleAddNodesButton}
+        onRunAlgorithm={handleRunAlgoButton}
+        onRunLocalSearch={handleLocalSearchButton}
+        onClear={handleClearBoard}
+        onPlayPause={handlePlayPauseButton}
+      />
+
+      {/* Tutorial Walkthrough */}
+      <Tour
+        steps={tutorialSteps}
+        isOpen={isTourOpen}
+        onRequestClose={closeTour}
+        showNumber={false}
+        showButtons={true}
+        showNavigation={true}
+        showNavigationNumber={false}
+        nextButton="Next"
+        prevButton="Previous"
+        lastStepNextButton="Finish"
+        accentColor="#5cb85c"
+      />
+    </>
+  );
+}
+
+export default App;
